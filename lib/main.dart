@@ -47,6 +47,7 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
 
   late final Ticker _ticker;
   late DateTime _lastTick;
+  bool _tickerActive = false;
 
   @override
   void initState() {
@@ -54,13 +55,25 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
     _loadImages();
     _reset();
     _lastTick = DateTime.now();
-    _ticker = createTicker(_onTick)..start();
+    _ticker = createTicker(_onTick);
+    _updateTicker();
   }
 
   @override
   void dispose() {
     _ticker.dispose();
     super.dispose();
+  }
+
+  void _updateTicker() {
+    final needTicker = speedGlobY != 0 || speedZ1 != 0 || speedZ2 != 0;
+    if (needTicker && !_tickerActive) {
+      _ticker.start();
+      _tickerActive = true;
+    } else if (!needTicker && _tickerActive) {
+      _ticker.stop();
+      _tickerActive = false;
+    }
   }
 
   double _wrap(double angle) {
@@ -80,6 +93,8 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
         cubes[1].rotateZ = _wrap(cubes[1].rotateZ + speedZ1 * dt / per);
         cubes[2].rotateZ = _wrap(cubes[2].rotateZ + speedZ2 * dt / per);
       });
+    } else {
+      _updateTicker();
     }
   }
 
@@ -176,16 +191,18 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
                     child:
                         !imagesLoaded
                             ? const Center(child: CircularProgressIndicator())
-                            : CustomPaint(
-                              size: Size.infinite,
-                              painter: ParallelepipedsPainter(
-                                cubes: cubes,
-                                globX: globX,
-                                globY: globY,
-                                globZ: globZ,
-                                faceImagesList: faceImagesList!,
+                            : RepaintBoundary(
+                                child: CustomPaint(
+                                  size: Size.infinite,
+                                  painter: ParallelepipedsPainter(
+                                    cubes: cubes,
+                                    globX: globX,
+                                    globY: globY,
+                                    globZ: globZ,
+                                    faceImagesList: faceImagesList!,
+                                  ),
+                                ),
                               ),
-                            ),
                   ),
                   Positioned(top: 16, right: 16, child: _resetButton()),
                 ],
@@ -197,9 +214,18 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
                 mainAxisSize: MainAxisSize.min,
                 spacing: 8,
                 children: [
-                  _buildSlider(vGlobY, (v) => setState(() => speedGlobY = v)),
-                  _buildSlider(vZ1, (v) => setState(() => speedZ1 = v)),
-                  _buildSlider(vZ2, (v) => setState(() => speedZ2 = v)),
+                  _buildSlider(vGlobY, (v) {
+                    setState(() => speedGlobY = v);
+                    _updateTicker();
+                  }),
+                  _buildSlider(vZ1, (v) {
+                    setState(() => speedZ1 = v);
+                    _updateTicker();
+                  }),
+                  _buildSlider(vZ2, (v) {
+                    setState(() => speedZ2 = v);
+                    _updateTicker();
+                  }),
                 ],
               ),
             ),
@@ -383,7 +409,21 @@ class ParallelepipedsPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant ParallelepipedsPainter oldDelegate) {
-    return cubes != oldDelegate.cubes ||
+    bool cubesChanged = false;
+    for (int i = 0; i < cubes.length; i++) {
+      final c = cubes[i];
+      final o = oldDelegate.cubes[i];
+      if (c.rotateX != o.rotateX ||
+          c.rotateY != o.rotateY ||
+          c.rotateZ != o.rotateZ ||
+          c.moveX != o.moveX ||
+          c.moveY != o.moveY ||
+          c.moveZ != o.moveZ) {
+        cubesChanged = true;
+        break;
+      }
+    }
+    return cubesChanged ||
         globX != oldDelegate.globX ||
         globY != oldDelegate.globY ||
         globZ != oldDelegate.globZ;
