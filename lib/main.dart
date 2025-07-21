@@ -67,23 +67,15 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
   void _onTick(Duration _) {
     final now = DateTime.now();
     final dt = now.difference(_lastTick).inMilliseconds / 1000.0;
+    const double per = 6.0;
     _lastTick = now;
     if (speedGlobY != 0 || speedZ1 != 0 || speedZ2 != 0) {
       setState(() {
-        globY += speedGlobY * dt / 6.0;
-        cubes[1].rotateZ += speedZ1 * dt / 6.0;
-        cubes[2].rotateZ += speedZ2 * dt / 6.0;
-        globY = _wrapAngle(globY);
-        cubes[1].rotateZ = _wrapAngle(cubes[1].rotateZ);
-        cubes[2].rotateZ = _wrapAngle(cubes[2].rotateZ);
+        globY = (globY + speedGlobY * dt / per) % 360;
+        cubes[1].rotateZ = (cubes[1].rotateZ + speedZ1 * dt / per) % 360;
+        cubes[2].rotateZ = (cubes[2].rotateZ + speedZ2 * dt / per) % 360;
       });
     }
-  }
-
-  double _wrapAngle(double angle) {
-    while (angle > 180) angle -= 360;
-    while (angle < -180) angle += 360;
-    return angle;
   }
 
   Future<void> _loadImages() async {
@@ -164,7 +156,7 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
                               ),
                             ),
                   ),
-                  Positioned(top: 8, right: 8, child: _resetButton()),
+                  Positioned(top: 16, right: 16, child: _resetButton()),
                 ],
               ),
             ),
@@ -189,9 +181,10 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
   Widget _resetButton() {
     return InkWell(
       onTap: _reset,
-      child: SizedBox.square(
-        dimension: 48,
-        child: const Icon(Icons.refresh_rounded, color: Color(0xFF757575)),
+      child: const Icon(
+        Icons.stop_circle_rounded,
+        size: 48,
+        color: Color(0xFF757575),
       ),
     );
   }
