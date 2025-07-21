@@ -35,9 +35,11 @@ class ParallelepipedState {
   });
 }
 
-class _ParallelepipedsAppState extends State<ParallelepipedsApp> with SingleTickerProviderStateMixin {
+class _ParallelepipedsAppState extends State<ParallelepipedsApp>
+    with SingleTickerProviderStateMixin {
   ui.Image? wideImage;
   ui.Image? narrowImage;
+  ui.Image? baseImage;
   bool imagesLoaded = false;
 
   double speedGlobY = 0;
@@ -87,9 +89,11 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp> with SingleTick
   Future<void> _loadImages() async {
     final wide = await _loadImage('assets/face_wide.drawio.png').crop();
     final narrow = await _loadImage('assets/face_narrow.drawio.png').crop();
+    final base = await _loadImage('assets/base.drawio.png');
     setState(() {
       wideImage = wide;
       narrowImage = narrow;
+      baseImage = base;
       imagesLoaded = true;
     });
   }
@@ -120,8 +124,8 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp> with SingleTick
       cubes[1].moveZ = 0;
       cubes[2].moveZ = d;
       cubes[0].rotateZ = 0;
-      cubes[1].rotateZ = -53;
-      cubes[2].rotateZ = -21;
+      cubes[1].rotateZ = 0;
+      cubes[2].rotateZ = 0;
       speedGlobY = 0;
       speedZ1 = 0;
       speedZ2 = 0;
@@ -139,7 +143,11 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp> with SingleTick
           children: [
             Expanded(
               child: Stack(
+                alignment: Alignment.bottomCenter,
                 children: [
+                  !imagesLoaded
+                      ? const Center(child: CircularProgressIndicator())
+                      : RawImage(image: baseImage!, width: 120),
                   Center(
                     child:
                         !imagesLoaded
