@@ -2,6 +2,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
 
+// Размеры параллелепипеда (3:3:1)
+const double w = 180, h = 180, d = 60;
 void main() => runApp(const MaterialApp(home: ParallelepipedsApp()));
 
 class ParallelepipedsApp extends StatefulWidget {
@@ -12,17 +14,12 @@ class ParallelepipedsApp extends StatefulWidget {
 }
 
 class ParallelepipedState {
-  double rotateX;
-  double rotateY;
-  double rotateZ;
-  double moveX;
-  double moveY;
-  double moveZ;
-
+  double rotateX, rotateY, rotateZ, moveX, moveY, moveZ;
   ParallelepipedState({
-    this.rotateX = 45,
-    this.rotateY = 45,
-    this.rotateZ = 0,
+    // Углы вращения для изометрической проекции
+    this.rotateX = 90 - 35.264, // 30 градусов от горизонтали
+    this.rotateY = 45, // 45 градусов от вертикали
+    this.rotateZ = 0, // Не требуется вращение вокруг оси Z
     this.moveX = 0,
     this.moveY = 0,
     this.moveZ = 0,
@@ -59,9 +56,7 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp> {
   }
 
   // Глобальное вращение (XYZ)
-  double globX = 0;
-  double globY = 0;
-  double globZ = 0;
+  double globX = 0, globY = 0, globZ = 0;
 
   // Состояния для каждого параллелепипеда
   final List<ParallelepipedState> cubes = [
@@ -75,12 +70,12 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp> {
       globX = 0;
       globY = 0;
       globZ = 0;
-      cubes[0].moveZ = -60;
+      cubes[0].moveZ = -d;
       cubes[1].moveZ = 0;
-      cubes[2].moveZ = 60;
-      cubes[0].rotateZ += 0;
-      cubes[1].rotateZ += 0;
-      cubes[2].rotateZ += 0;
+      cubes[2].moveZ = d;
+      cubes[0].rotateZ = 0;
+      cubes[1].rotateZ = 0;
+      cubes[2].rotateZ = 0;
     });
   }
 
@@ -98,8 +93,9 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp> {
                 child: AspectRatio(
                   aspectRatio: 1,
                   child:
-                      imagesLoaded
-                          ? CustomPaint(
+                      !imagesLoaded
+                          ? const Center(child: CircularProgressIndicator())
+                          : CustomPaint(
                             painter: ParallelepipedsPainter(
                               cubes: cubes,
                               globX: globX,
@@ -109,8 +105,7 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp> {
                               narrowImage: narrowImage,
                             ),
                             size: Size.infinite,
-                          )
-                          : const Center(child: CircularProgressIndicator()),
+                          ),
                 ),
               ),
             ),
@@ -136,22 +131,15 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp> {
     );
   }
 
-  Widget _buildSlider(
-    double value,
-    ValueChanged<double> onChanged, {
-    double min = -135,
-    double max = 35,
-  }) => Row(
+  Widget _buildSlider(double value, ValueChanged<double> onChanged) => Row(
     children: [
       Expanded(
         child: Slider(
           value: value,
-          min: min,
-          max: max,
-          divisions: (max - min).toInt() ~/ 5,
-          onChanged: (v) {
-            onChanged(v);
-          },
+          min: -180,
+          max: 180,
+          divisions: 360 ~/ 5,
+          onChanged: (v) => onChanged(v),
         ),
       ),
       SizedBox(width: 8),
@@ -173,9 +161,6 @@ class ParallelepipedsPainter extends CustomPainter {
     required this.wideImage,
     required this.narrowImage,
   });
-
-  // Размеры параллелепипеда (3:3:1)
-  static const double w = 180, h = 180, d = 60;
 
   // Центры для трёх параллелепипедов
   final List<vm.Vector3> centers = [
@@ -225,7 +210,10 @@ class ParallelepipedsPainter extends CustomPainter {
           ..rotateY(vm.radians(globY))
           ..rotateZ(vm.radians(globZ));
 
-    for (int i = 0; i < 3; i++) {
+    late List<int> order =
+        (globY >= -150 && globY <= 30) ? [0, 1, 2] : [2, 1, 0];
+
+    for (int i in order) {
       final ParallelepipedState state = cubes[i];
       // Локальная матрица: вращение и сдвиг вдоль своей оси (Z)
       final Matrix4 local =
