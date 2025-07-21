@@ -6,7 +6,13 @@ import 'dart:async';
 
 // Размеры параллелепипеда (3:3:1)
 const double w = 180, h = 180, d = 60;
-void main() => runApp(const MaterialApp(home: ParallelepipedsApp()));
+void main() => runApp(
+  MaterialApp(
+    home: ParallelepipedsApp(),
+    debugShowCheckedModeBanner: false,
+    theme: ThemeData(scaffoldBackgroundColor: Color(0xFFEAEAEA)),
+  ),
+);
 
 class ParallelepipedsApp extends StatefulWidget {
   const ParallelepipedsApp({super.key});
@@ -76,8 +82,8 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp> {
       cubes[1].moveZ = 0;
       cubes[2].moveZ = d;
       cubes[0].rotateZ = 0;
-      cubes[1].rotateZ = 0;
-      cubes[2].rotateZ = 0;
+      cubes[1].rotateZ = -53;
+      cubes[2].rotateZ = -21;
     });
   }
 
@@ -133,21 +139,24 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp> {
     );
   }
 
-  Widget _buildSlider(double value, ValueChanged<double> onChanged) => Row(
-    children: [
-      Expanded(
-        child: Slider(
-          value: value,
-          min: -180,
-          max: 180,
-          divisions: 360 ~/ 5,
-          onChanged: (v) => onChanged(v),
+  Widget _buildSlider(double value, ValueChanged<double> onChanged) =>
+      SliderTheme(
+        data: SliderTheme.of(context).copyWith(
+          trackHeight: 4,
+          activeTrackColor: const Color(0xFF757575),
+          inactiveTrackColor: const Color(0xFFBABABA),
+          thumbColor: const Color(0xFF757575),
+          overlayColor: const Color(0x00BABABA),
+          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 14),
+          overlayShape: const RoundSliderOverlayShape(overlayRadius: 20),
+          tickMarkShape: SliderTickMarkShape.noTickMark,
+          valueIndicatorShape: SliderComponentShape.noOverlay,
+          showValueIndicator: ShowValueIndicator.never,
+          // Убираем лишние отступы
+          trackShape: const RoundedRectSliderTrackShape(),
         ),
-      ),
-      SizedBox(width: 8),
-      Text(value.toStringAsFixed(1)),
-    ],
-  );
+        child: Slider(value: value, min: -180, max: 180, onChanged: onChanged),
+      );
 }
 
 class ParallelepipedsPainter extends CustomPainter {
