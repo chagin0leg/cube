@@ -97,28 +97,30 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp> {
         child: Column(
           children: [
             Expanded(
-              child: Center(
-                child: AspectRatio(
-                  aspectRatio: 1,
-                  child:
-                      !imagesLoaded
-                          ? const Center(child: CircularProgressIndicator())
-                          : CustomPaint(
-                            painter: ParallelepipedsPainter(
-                              cubes: cubes,
-                              globX: globX,
-                              globY: globY,
-                              globZ: globZ,
-                              wideImage: wideImage,
-                              narrowImage: narrowImage,
+              child: Stack(
+                children: [
+                  Center(
+                    child:
+                        !imagesLoaded
+                            ? const Center(child: CircularProgressIndicator())
+                            : CustomPaint(
+                              size: Size.infinite,
+                              painter: ParallelepipedsPainter(
+                                cubes: cubes,
+                                globX: globX,
+                                globY: globY,
+                                globZ: globZ,
+                                wideImage: wideImage,
+                                narrowImage: narrowImage,
+                              ),
                             ),
-                            size: Size.infinite,
-                          ),
-                ),
+                  ),
+                  Positioned(top: 8, right: 8, child: _resetButton()),
+                ],
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 48),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 spacing: 8,
@@ -129,7 +131,6 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp> {
                   // _buildSlider(z0, (v) => setState(() => cubes[0].rotateZ = v)),
                   _buildSlider(z1, (v) => setState(() => cubes[1].rotateZ = v)),
                   _buildSlider(z2, (v) => setState(() => cubes[2].rotateZ = v)),
-                  ElevatedButton(onPressed: _reset, child: const Text('Сброс')),
                 ],
               ),
             ),
@@ -139,10 +140,20 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp> {
     );
   }
 
+  Widget _resetButton() {
+    return InkWell(
+      onTap: _reset,
+      child: SizedBox.square(
+        dimension: 48,
+        child: const Icon(Icons.refresh_rounded, color: Color(0xFF757575)),
+      ),
+    );
+  }
+
   Widget _buildSlider(double value, ValueChanged<double> onChanged) =>
       SliderTheme(
         data: SliderTheme.of(context).copyWith(
-          trackHeight: 4,
+          trackHeight: 2,
           activeTrackColor: const Color(0xFF757575),
           inactiveTrackColor: const Color(0xFFBABABA),
           thumbColor: const Color(0xFF757575),
@@ -152,7 +163,6 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp> {
           tickMarkShape: SliderTickMarkShape.noTickMark,
           valueIndicatorShape: SliderComponentShape.noOverlay,
           showValueIndicator: ShowValueIndicator.never,
-          // Убираем лишние отступы
           trackShape: const RoundedRectSliderTrackShape(),
         ),
         child: Slider(value: value, min: -180, max: 180, onChanged: onChanged),
