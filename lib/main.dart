@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
 import 'dart:typed_data';
 import 'dart:async';
+import 'package:flutter/scheduler.dart';
 
 // Размеры параллелепипеда (3:3:1)
 const double w = 180, h = 180, d = 60;
@@ -34,16 +35,53 @@ class ParallelepipedState {
   });
 }
 
-class _ParallelepipedsAppState extends State<ParallelepipedsApp> {
+class _ParallelepipedsAppState extends State<ParallelepipedsApp> with SingleTickerProviderStateMixin {
   ui.Image? wideImage;
   ui.Image? narrowImage;
   bool imagesLoaded = false;
+
+  double speedGlobY = 0;
+  double speedZ1 = 0;
+  double speedZ2 = 0;
+
+  late final Ticker _ticker;
+  late DateTime _lastTick;
 
   @override
   void initState() {
     super.initState();
     _loadImages();
     _reset();
+    _lastTick = DateTime.now();
+    _ticker = createTicker(_onTick)..start();
+  }
+
+  @override
+  void dispose() {
+    _ticker.dispose();
+    super.dispose();
+  }
+
+  void _onTick(Duration _) {
+    final now = DateTime.now();
+    final dt = now.difference(_lastTick).inMilliseconds / 1000.0;
+    _lastTick = now;
+    if (speedGlobY != 0 || speedZ1 != 0 || speedZ2 != 0) {
+      setState(() {
+        globY += speedGlobY * dt / 6.0;
+        cubes[1].rotateZ += speedZ1 * dt / 6.0;
+        cubes[2].rotateZ += speedZ2 * dt / 6.0;
+        globY = _wrapAngle(globY);
+        cubes[1].rotateZ = _wrapAngle(cubes[1].rotateZ);
+        cubes[2].rotateZ = _wrapAngle(cubes[2].rotateZ);
+      });
+    }
+  }
+
+  double _wrapAngle(double angle) {
+    while (angle > 180) angle -= 360;
+    while (angle < -180) angle += 360;
+    return angle;
   }
 
   Future<void> _loadImages() async {
@@ -84,14 +122,17 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp> {
       cubes[0].rotateZ = 0;
       cubes[1].rotateZ = -53;
       cubes[2].rotateZ = -21;
+      speedGlobY = 0;
+      speedZ1 = 0;
+      speedZ2 = 0;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final z0 = cubes[0].rotateZ;
-    final z1 = cubes[1].rotateZ;
-    final z2 = cubes[2].rotateZ;
+    final double vGlobY = speedGlobY;
+    final double vZ1 = speedZ1;
+    final double vZ2 = speedZ2;
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -125,12 +166,9 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp> {
                 mainAxisSize: MainAxisSize.min,
                 spacing: 8,
                 children: [
-                  // _buildSlider(globX, (v) => setState(() => globX = v)),
-                  _buildSlider(globY, (v) => setState(() => globY = v)),
-                  // _buildSlider(globZ, (v) => setState(() => globZ = v)),
-                  // _buildSlider(z0, (v) => setState(() => cubes[0].rotateZ = v)),
-                  _buildSlider(z1, (v) => setState(() => cubes[1].rotateZ = v)),
-                  _buildSlider(z2, (v) => setState(() => cubes[2].rotateZ = v)),
+                  _buildSlider(vGlobY, (v) => setState(() => speedGlobY = v)),
+                  _buildSlider(vZ1, (v) => setState(() => speedZ1 = v)),
+                  _buildSlider(vZ2, (v) => setState(() => speedZ2 = v)),
                 ],
               ),
             ),
