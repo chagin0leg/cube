@@ -37,9 +37,8 @@ class ParallelepipedState {
 
 class _ParallelepipedsAppState extends State<ParallelepipedsApp>
     with SingleTickerProviderStateMixin {
-  ui.Image? wideImage;
-  ui.Image? narrowImage;
   ui.Image? baseImage;
+  List<List<ui.Image?>>? faceImagesList;
   bool imagesLoaded = false;
 
   double speedGlobY = 0;
@@ -82,10 +81,37 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
     final wide = await _loadImage('assets/face_wide.drawio.png').crop();
     final narrow = await _loadImage('assets/face_narrow.drawio.png').crop();
     final base = await _loadImage('assets/base.drawio.png');
+    final wide_inside =
+        await _loadImage('assets/face_wide_inside.drawio.png').crop();
     setState(() {
-      wideImage = wide;
-      narrowImage = narrow;
       baseImage = base;
+      faceImagesList = // Для каждого параллелепипеда свой набор граней
+          [
+        [
+          wide, // back
+          wide_inside, // front
+          narrow, // top
+          narrow, // bottom
+          narrow, // right
+          narrow, // left
+        ],
+        [
+          wide_inside, // back
+          wide_inside, // front
+          narrow, // top
+          narrow, // bottom
+          narrow, // right
+          narrow, // left
+        ],
+        [
+          wide_inside, // back
+          wide, // front
+          narrow, // top
+          narrow, // bottom
+          narrow, // right
+          narrow, // left
+        ],
+      ];
       imagesLoaded = true;
     });
   }
@@ -151,8 +177,7 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
                                 globX: globX,
                                 globY: globY,
                                 globZ: globZ,
-                                wideImage: wideImage,
-                                narrowImage: narrowImage,
+                                faceImagesList: faceImagesList!,
                               ),
                             ),
                   ),
@@ -211,15 +236,13 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
 class ParallelepipedsPainter extends CustomPainter {
   final List<ParallelepipedState> cubes;
   final double globX, globY, globZ;
-  final ui.Image? wideImage;
-  final ui.Image? narrowImage;
+  final List<List<ui.Image?>> faceImagesList;
   ParallelepipedsPainter({
     required this.cubes,
     required this.globX,
     required this.globY,
     required this.globZ,
-    required this.wideImage,
-    required this.narrowImage,
+    required this.faceImagesList,
   });
 
   // Центры для трёх параллелепипедов
@@ -248,16 +271,6 @@ class ParallelepipedsPainter extends CustomPainter {
     [3, 2, 6, 7], // bottom
     [1, 2, 6, 5], // right
     [0, 3, 7, 4], // left
-  ];
-
-  // 6 картинок для каждой грани (пока wide/narrow, потом можно разные)
-  List<ui.Image?> get faceImages => [
-    wideImage, // back [0,1,2,3]
-    wideImage, // front [4,5,6,7]
-    narrowImage, // top [0,1,5,4]
-    narrowImage, // bottom [3,2,6,7]
-    narrowImage, // right [1,2,6,5]
-    narrowImage, // left [0,3,7,4]
   ];
 
   @override
@@ -300,6 +313,8 @@ class ParallelepipedsPainter extends CustomPainter {
           ),
       ];
       faceDepths.sort((a, b) => a.depth.compareTo(b.depth));
+      // --- Используем индивидуальные картинки граней ---
+      final List<ui.Image?> faceImages = faceImagesList[i];
       for (final fd in faceDepths) {
         final path =
             Path()..moveTo(

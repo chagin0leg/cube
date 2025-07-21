@@ -63,6 +63,7 @@ flutter:
     - assets/base.drawio.png
     - assets/face_wide.drawio.png
     - assets/face_narrow.drawio.png
+    - assets/face_wide_inside.drawio.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
