@@ -63,6 +63,12 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
     super.dispose();
   }
 
+  double _wrap(double angle) {
+    angle = angle % 360.0;
+    if (angle < 0) angle += 360.0;
+    return angle;
+  }
+
   void _onTick(Duration _) {
     final now = DateTime.now();
     final dt = now.difference(_lastTick).inMilliseconds / 1000.0;
@@ -70,9 +76,9 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
     _lastTick = now;
     if (speedGlobY != 0 || speedZ1 != 0 || speedZ2 != 0) {
       setState(() {
-        globY = (globY + speedGlobY * dt / per) % 360;
-        cubes[1].rotateZ = (cubes[1].rotateZ + speedZ1 * dt / per) % 360;
-        cubes[2].rotateZ = (cubes[2].rotateZ + speedZ2 * dt / per) % 360;
+        globY = _wrap(globY + speedGlobY * dt / per);
+        cubes[1].rotateZ = _wrap(cubes[1].rotateZ + speedZ1 * dt / per);
+        cubes[2].rotateZ = _wrap(cubes[2].rotateZ + speedZ2 * dt / per);
       });
     }
   }
@@ -273,6 +279,11 @@ class ParallelepipedsPainter extends CustomPainter {
     [0, 3, 7, 4], // left
   ];
 
+  bool inSector(double angle, double from, double to) {
+    if (from < to) return angle >= from && angle <= to;
+    return angle >= from || angle <= to;
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
     final Offset center = Offset(size.width / 2, size.height / 2);
@@ -283,8 +294,7 @@ class ParallelepipedsPainter extends CustomPainter {
           ..rotateY(vm.radians(globY))
           ..rotateZ(vm.radians(globZ));
 
-    late List<int> order =
-        (globY >= -150 && globY <= 30) ? [0, 1, 2] : [2, 1, 0];
+    late List<int> order = inSector(globY, 210, 30) ? [0, 1, 2] : [2, 1, 0];
 
     for (int i in order) {
       final ParallelepipedState state = cubes[i];
