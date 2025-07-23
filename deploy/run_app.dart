@@ -36,7 +36,7 @@ void main() async {
     @echo off
     pushd "%~dp0"
     start /B /wait cube.exe
-    timeout /t 5 >nul
+    timeout /t 5
     popd
     rmdir /s /q "%~dp0"
   ''';
@@ -44,8 +44,7 @@ void main() async {
   final batFile = File('${tempDir.path}\\run.bat');
   await batFile.writeAsString(batContent);
 
-  await Process.start('cmd', ['/c', 'start', '/B', batFile.path],
-      runInShell: false);
+  await Process.start('cmd', ['/c', 'start', '/B', batFile.path]);
 
   exit(0);
 }
@@ -73,17 +72,19 @@ Future<void> downloadLatestVersion() async {
     if (response.statusCode == 200) {
       final oldFile = Platform.resolvedExecutable;
       final tempDir = Directory.systemTemp.path;
-      final fileName = url.split('/').last; // Извлекаем имя файла из URL
+      final fileName = url.split('/').last;
       final newFile = File('$tempDir\\$fileName');
       final batFile = File('$tempDir\\update_version.bat');
       final String command = '''
         @echo off
-        ping 127.0.0.1 -n 5 > nul
+        timeout /t 5
         if exist "$oldFile" (
           del "$oldFile"
         )
         move "${newFile.path}" "$oldFile"
-        start "" "$oldFile"
+        start /B /wait  "" "$oldFile"
+        timeout /t 5
+        del "%~f0"
       ''';
 
       print('Save temporary application file');
@@ -92,9 +93,10 @@ Future<void> downloadLatestVersion() async {
 
       print('Create and launch update script');
       await batFile.writeAsString(command);
-      await Process.start(batFile.path, [], runInShell: true);
 
       print('Restart application! Goodbye.. (っ╥╯﹏╰╥c)');
+      await Future.delayed(Duration(seconds: 2));
+      await Process.start('cmd', ['/c', 'start', '/B', batFile.path]);
       exit(0);
     } else {
       throw Exception(
