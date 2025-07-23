@@ -23,6 +23,7 @@
    ```
 4. Запустите на Windows:
    ```sh
+   flutter create --platforms windows --empty .
    flutter run -d windows
    ```
 
