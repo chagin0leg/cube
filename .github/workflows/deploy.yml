@@ -98,10 +98,11 @@ jobs:
           - **Полная версия:** ${{ steps.version.outputs.full_version }}
           
           ### Технические детали
-          - Дата сборки: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          - Дата сборки: ${{ github.event.head_commit.timestamp }}
           - Коммит: [`${{ github.sha }}`](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
           EOF
           
+          # Добавляем секцию изменений только если есть коммиты
           if [ "${{ steps.commits.outputs.has_commits }}" = "true" ]; then
             cat >> release_notes.md << 'EOF'
             
@@ -157,6 +158,7 @@ jobs:
       - name: Package application with deploy.dart
         run: |
           cd deploy
+          dart pub get
           dart run .\deploy.dart "..\\build\\windows\\x64\\runner\\Release"
           cd ..
       
@@ -173,14 +175,14 @@ jobs:
         with:
           script: |
             try {
-              const { data: release } = await github.rest.repos.getReleaseByTag({
+              const release = await github.rest.repos.getReleaseByTag({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 tag: '${{ needs.build_web.outputs.release_tag }}'
               });
-              core.setOutput('result', release.body || '');
+              core.setOutput('result', JSON.stringify(release.data.body || ''));
             } catch (error) {
-              core.setOutput('result', '');
+              core.setOutput('result', '""');
             }
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -191,7 +193,7 @@ jobs:
           tag_name: ${{ needs.build_web.outputs.release_tag }}
           update: true
           body: |
-            ${{ steps.get_release.outputs.result }}
+            ${{ fromJson(steps.get_release.outputs.result) }}
             - [Windows x64](https://github.com/${{ github.repository }}/releases/download/${{ needs.build_web.outputs.release_tag }}/cube.exe)
           files: |
             deploy/cube.exe
