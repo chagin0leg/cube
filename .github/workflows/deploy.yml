@@ -27,11 +27,17 @@ jobs:
       - name: Auto increment build number
         id: version
         run: |
+          # Читаем текущую версию из pubspec.yaml
           CURRENT_VERSION=$(grep 'version:' pubspec.yaml | sed 's/version: //')
           VERSION_PART=$(echo $CURRENT_VERSION | cut -d'+' -f1)
+          
+          # Получаем общее количество коммитов в репозитории
           TOTAL_COMMITS=$(git rev-list --count HEAD)
+          
+          # Используем количество коммитов как build number
           NEW_VERSION="$VERSION_PART+$TOTAL_COMMITS"
           
+          # Обновляем pubspec.yaml только если версия изменилась
           if [ "$CURRENT_VERSION" != "$NEW_VERSION" ]; then
             sed -i "s/version: $CURRENT_VERSION/version: $NEW_VERSION/" pubspec.yaml
             echo "Updated version from $CURRENT_VERSION to $NEW_VERSION"
@@ -39,9 +45,11 @@ jobs:
             echo "Version unchanged: $CURRENT_VERSION"
           fi
           
+          # Используем новый формат для передачи данных между шагами
           echo "version=$VERSION_PART" >> $GITHUB_OUTPUT
           echo "build=$TOTAL_COMMITS" >> $GITHUB_OUTPUT
           echo "full_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "total_commits=$TOTAL_COMMITS" >> $GITHUB_OUTPUT
 
       - name: Install dependencies
         run: flutter pub get
@@ -58,9 +66,11 @@ jobs:
       - name: Get commit history
         id: commits
         run: |
+          # Получаем последний тег (релиз)
           LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
           
           if [ -n "$LAST_TAG" ]; then
+            # Получаем коммиты с последнего релиза и форматируем как ссылки
             COMMIT_LIST=$(git log --oneline --no-merges --format="%H %s" ${LAST_TAG}..HEAD | head -10 | while read hash message; do
               short_hash=${hash:0:7}
               echo "- [\`$short_hash\`](https://github.com/${{ github.repository }}/commit/$hash) $message"
@@ -70,6 +80,7 @@ jobs:
             echo "EOF" >> $GITHUB_OUTPUT
             echo "has_commits=true" >> $GITHUB_OUTPUT
           else
+            # Если это первый релиз, получаем все коммиты
             COMMIT_LIST=$(git log --oneline --no-merges --format="%H %s" | head -10 | while read hash message; do
               short_hash=${hash:0:7}
               echo "- [\`$short_hash\`](https://github.com/${{ github.repository }}/commit/$hash) $message"
@@ -87,7 +98,7 @@ jobs:
           echo "release_tag=$RELEASE_TAG" >> $GITHUB_OUTPUT
           echo "Created release tag: $RELEASE_TAG"
 
-      - name: Create GitHub Release
+      - name: Create Release
         run: |
           cat > release_notes.md << 'EOF'
           ## Автоматический релиз
@@ -115,6 +126,7 @@ jobs:
           
           ### Скачать
           - [Веб-версия](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/)
+          - [Win64 Portable](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/cube.exe)
           EOF
           
           gh release create "${{ steps.set_release_info.outputs.release_tag }}" \
@@ -123,6 +135,8 @@ jobs:
             --repo ${{ github.repository }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
 
   build_windows:
     runs-on: windows-latest
@@ -168,33 +182,12 @@ jobs:
               Write-Error "cube.exe not found!"
               exit 1
           }
-        
-      - name: Get current release body
-        id: get_release
-        uses: actions/github-script@v6
-        with:
-          script: |
-            try {
-              const release = await github.rest.repos.getReleaseByTag({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                tag: '${{ needs.build_web.outputs.release_tag }}'
-              });
-              core.setOutput('result', JSON.stringify(release.data.body || ''));
-            } catch (error) {
-              core.setOutput('result', '""');
-            }
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update GitHub Release with Windows executable
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ needs.build_web.outputs.release_tag }}
           update: true
-          body: |
-            ${{ fromJson(steps.get_release.outputs.result) }}
-            - [Windows x64](https://github.com/${{ github.repository }}/releases/download/${{ needs.build_web.outputs.release_tag }}/cube.exe)
           files: |
             deploy/cube.exe
         env:
