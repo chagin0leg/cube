@@ -126,7 +126,7 @@ jobs:
           
           ### Скачать
           - [Веб-версия](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/)
-          - [Win64 Portable](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/cube.exe)
+          - [Win64 Portable](https://github.com/${{ github.repository }}/releases/download/${{ steps.set_release_info.outputs.release_tag }}/cube.exe)
           EOF
           
           gh release create "${{ steps.set_release_info.outputs.release_tag }}" \
@@ -176,6 +176,26 @@ jobs:
           dart run .\deploy.dart "..\\build\\windows\\x64\\runner\\Release"
           cd ..
       
+      - name: Download Resource Hacker
+        run: |
+          $url = "https://www.angusj.com/resourcehacker/resource_hacker.zip"
+          $output = "ResourceHacker.zip"
+          Invoke-WebRequest -Uri $url -OutFile $output
+          Write-Host "Downloaded Resource Hacker"
+          Expand-Archive -Path ResourceHacker.zip -DestinationPath ResourceHacker
+          Write-Host "Unzipped Resource Hacker"
+
+      - name: Apply icon to portable EXE
+        run: |
+          $hacker = "ResourceHacker\\ResourceHacker.exe"
+          $exeFile = "deploy\\cube.exe"
+          $iconFile = "windows\\runner\\resources\\app_icon.ico"
+          if (-not (Test-Path $exeFile)) { throw "EXE file not found: $exeFile" }
+          if (-not (Test-Path $iconFile)) { throw "Icon file not found: $iconFile" }
+          if (-not (Test-Path $iconFile)) { throw "Icon file not found: $iconFile" }
+          & $hacker -open $exeFile -save $exeFile -action addoverwrite -res $iconFile -mask ICONGROUP,MAINICON
+          Write-Host "Icon applied to $exeFile"
+
       - name: Verify executable exists
         run: |
           if (-not (Test-Path -Path "deploy/cube.exe")) {
