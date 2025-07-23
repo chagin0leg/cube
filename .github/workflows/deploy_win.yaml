@@ -1,0 +1,82 @@
+name: Build and Release Windows Executable
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: stable
+        cache: true
+        cache-key: flutter-packages-${{ hashFiles('pubspec.yaml') }}
+
+    - name: Install dependencies
+      run: flutter pub get
+
+    - name: Update version info
+      run: |
+        $tag_version = '${{ github.ref_name }}'.TrimStart('v')  # Убираем 'v' из тега
+        (Get-Content pubspec.yaml) -replace '^version: .+', "version: $tag_version" | Set-Content pubspec.yaml
+        (Get-Content deploy/run_app.dart) -replace '^const String version = .+', "const String version = '$tag_version';" | Set-Content deploy/run_app.dart
+      shell: pwsh
+
+    - name: Build Windows executable
+      run: |
+        flutter create --platforms windows --empty
+        flutter build windows --release
+
+    - name: Package application with deploy.dart
+      run: |
+        cd deploy
+        dart run .\deploy.dart "..\\build\\windows\\x64\\runner\\Release"
+        cd ..
+      
+    - name: Verify executable exists
+      run: |
+        if (-not (Test-Path -Path "deploy/cube.exe")) {
+            Write-Error "cube.exe not found!"
+            exit 1
+        }
+        
+    - name: Get current release body
+      id: get_release
+      uses: actions/github-script@v6
+      with:
+        script: |
+          try {
+            const { data: release } = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: '${{ github.ref_name }}'
+            });
+            core.setOutput('result', release.body || '');
+          } catch (error) {
+            core.setOutput('result', '');
+          }
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload to existing release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.ref_name }}
+        update: true
+        body: |-
+          ${{ steps.get_release.outputs.result }}
+          - [Windows x64](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/cube.exe)
+        files: |
+          deploy/cube.exe
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
