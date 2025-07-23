@@ -1,12 +1,17 @@
-name: Deploy Flutter Web to GitHub Pages
+name: Build, Deploy and Release
 
 on:
   push:
     branches: [main]
 
 jobs:
-  build-and-deploy:
+  build_web:
     runs-on: ubuntu-latest
+    outputs:
+      release_tag: ${{ steps.set_release_info.outputs.release_tag }}
+      full_version: ${{ steps.version.outputs.full_version }}
+      version_part: ${{ steps.version.outputs.version }}
+      build_number: ${{ steps.version.outputs.build }}
 
     steps:
       - name: Checkout repository
@@ -22,17 +27,11 @@ jobs:
       - name: Auto increment build number
         id: version
         run: |
-          # Читаем текущую версию из pubspec.yaml
           CURRENT_VERSION=$(grep 'version:' pubspec.yaml | sed 's/version: //')
           VERSION_PART=$(echo $CURRENT_VERSION | cut -d'+' -f1)
-          
-          # Получаем общее количество коммитов в репозитории
           TOTAL_COMMITS=$(git rev-list --count HEAD)
-          
-          # Используем количество коммитов как build number
           NEW_VERSION="$VERSION_PART+$TOTAL_COMMITS"
           
-          # Обновляем pubspec.yaml только если версия изменилась
           if [ "$CURRENT_VERSION" != "$NEW_VERSION" ]; then
             sed -i "s/version: $CURRENT_VERSION/version: $NEW_VERSION/" pubspec.yaml
             echo "Updated version from $CURRENT_VERSION to $NEW_VERSION"
@@ -40,11 +39,9 @@ jobs:
             echo "Version unchanged: $CURRENT_VERSION"
           fi
           
-          # Используем новый формат для передачи данных между шагами
           echo "version=$VERSION_PART" >> $GITHUB_OUTPUT
           echo "build=$TOTAL_COMMITS" >> $GITHUB_OUTPUT
           echo "full_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "total_commits=$TOTAL_COMMITS" >> $GITHUB_OUTPUT
 
       - name: Install dependencies
         run: flutter pub get
@@ -61,11 +58,9 @@ jobs:
       - name: Get commit history
         id: commits
         run: |
-          # Получаем последний тег (релиз)
           LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
           
           if [ -n "$LAST_TAG" ]; then
-            # Получаем коммиты с последнего релиза и форматируем как ссылки
             COMMIT_LIST=$(git log --oneline --no-merges --format="%H %s" ${LAST_TAG}..HEAD | head -10 | while read hash message; do
               short_hash=${hash:0:7}
               echo "- [\`$short_hash\`](https://github.com/${{ github.repository }}/commit/$hash) $message"
@@ -75,7 +70,6 @@ jobs:
             echo "EOF" >> $GITHUB_OUTPUT
             echo "has_commits=true" >> $GITHUB_OUTPUT
           else
-            # Если это первый релиз, получаем все коммиты
             COMMIT_LIST=$(git log --oneline --no-merges --format="%H %s" | head -10 | while read hash message; do
               short_hash=${hash:0:7}
               echo "- [\`$short_hash\`](https://github.com/${{ github.repository }}/commit/$hash) $message"
@@ -86,7 +80,14 @@ jobs:
             echo "has_commits=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create Release
+      - name: Set release information
+        id: set_release_info
+        run: |
+          RELEASE_TAG="v${{ steps.version.outputs.version }}-${{ steps.version.outputs.build }}"
+          echo "release_tag=$RELEASE_TAG" >> $GITHUB_OUTPUT
+          echo "Created release tag: $RELEASE_TAG"
+
+      - name: Create GitHub Release
         run: |
           cat > release_notes.md << 'EOF'
           ## Автоматический релиз
@@ -97,11 +98,10 @@ jobs:
           - **Полная версия:** ${{ steps.version.outputs.full_version }}
           
           ### Технические детали
-          - Дата сборки: ${{ github.event.head_commit.timestamp }}
+          - Дата сборки: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
           - Коммит: [`${{ github.sha }}`](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
           EOF
           
-          # Добавляем секцию изменений только если есть коммиты
           if [ "${{ steps.commits.outputs.has_commits }}" = "true" ]; then
             cat >> release_notes.md << 'EOF'
             
@@ -116,17 +116,84 @@ jobs:
           - [Веб-версия](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/)
           EOF
           
-          gh release create "v${{ steps.version.outputs.version }}-${{ steps.version.outputs.build }}" \
+          gh release create "${{ steps.set_release_info.outputs.release_tag }}" \
             --title "Cube ${{ steps.version.outputs.version }} (${{ steps.version.outputs.build }})" \
             --notes-file release_notes.md \
             --repo ${{ github.repository }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # - name: Commit version update
-      #   run: |
-      #     git config --local user.email "action@github.com"
-      #     git config --local user.name "GitHub Action"
-      #     git add pubspec.yaml
-      #     git commit -m "Update build number to ${{ steps.version.outputs.build }} (total commits: ${{ steps.version.outputs.total_commits }})" || exit 0
-      #     git push 
+  build_windows:
+    runs-on: windows-latest
+    needs: build_web
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+          cache-key: flutter-packages-${{ hashFiles('pubspec.yaml') }}
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Update version info
+        run: |
+          $full_version = '${{ needs.build_web.outputs.full_version }}'
+          (Get-Content pubspec.yaml) -replace '^version: .+', "version: $full_version" | Set-Content pubspec.yaml
+          (Get-Content deploy/run_app.dart) -replace '^const String version = .+', "const String version = '$full_version';" | Set-Content deploy/run_app.dart
+        shell: pwsh
+
+      - name: Build Windows executable
+        run: |
+          flutter create --platforms windows --empty .
+          flutter build windows --release
+
+      - name: Package application with deploy.dart
+        run: |
+          cd deploy
+          dart run .\deploy.dart "..\\build\\windows\\x64\\runner\\Release"
+          cd ..
+      
+      - name: Verify executable exists
+        run: |
+          if (-not (Test-Path -Path "deploy/cube.exe")) {
+              Write-Error "cube.exe not found!"
+              exit 1
+          }
+        
+      - name: Get current release body
+        id: get_release
+        uses: actions/github-script@v6
+        with:
+          script: |
+            try {
+              const { data: release } = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag: '${{ needs.build_web.outputs.release_tag }}'
+              });
+              core.setOutput('result', release.body || '');
+            } catch (error) {
+              core.setOutput('result', '');
+            }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update GitHub Release with Windows executable
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.build_web.outputs.release_tag }}
+          update: true
+          body: |
+            ${{ steps.get_release.outputs.result }}
+            - [Windows x64](https://github.com/${{ github.repository }}/releases/download/${{ needs.build_web.outputs.release_tag }}/cube.exe)
+          files: |
+            deploy/cube.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
