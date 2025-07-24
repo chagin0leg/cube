@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:cube/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
@@ -92,13 +91,7 @@ class _CubeStatusTextState extends State<CubeStatusText>
     final status = _displayed;
     return Text(
       'The Cube: $status${_show ? '_' : ' '}',
-      style: TextStyle(
-        fontSize: 16,
-        color: AppColors.darkGrey,
-        fontFamily: 'RobotoMono',
-        fontWeight: FontWeight.w700,
-        letterSpacing: 1,
-      ),
+      style: Theme.of(context).textTheme.titleSmall,
     );
   }
 }
