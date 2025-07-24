@@ -3,6 +3,9 @@ import 'dart:ui' as ui;
 import 'package:cube/crop_image_extension.dart';
 import 'package:cube/cube_status_text.dart';
 import 'package:cube/parallelepipeds_painter.dart';
+import 'package:cube/theme/app_colors.dart';
+import 'package:cube/theme/theme_notifier.dart';
+import 'package:cube/theme/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
@@ -233,7 +236,7 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
       child: const Icon(
         Icons.stop_circle_rounded,
         size: 48,
-        color: Color(0xFF757575),
+        color: AppColors.grey,
       ),
     );
   }
@@ -242,10 +245,10 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
       SliderTheme(
         data: SliderTheme.of(context).copyWith(
           trackHeight: 2,
-          activeTrackColor: const Color(0xFF757575),
-          inactiveTrackColor: const Color(0xFFBABABA),
-          thumbColor: const Color(0xFF757575),
-          overlayColor: const Color(0x00BABABA),
+          activeTrackColor: AppColors.grey,
+          inactiveTrackColor: AppColors.lightGrey,
+          thumbColor: AppColors.grey,
+          overlayColor: AppColors.lightGrey.withValues(alpha: 0x00),
           thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 14),
           overlayShape: const RoundSliderOverlayShape(overlayRadius: 20),
           tickMarkShape: SliderTickMarkShape.noTickMark,
