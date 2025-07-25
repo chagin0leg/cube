@@ -33,6 +33,9 @@ class AppTheme {
 
   static final ThemeData dark = ThemeData(
     scaffoldBackgroundColor: AppColors.darkPlatinum,
+    splashColor: AppColors.transparent,
+    highlightColor: AppColors.transparent,
+    hoverColor: AppColors.transparent,
     textTheme: TextTheme(
       titleSmall: TextStyle(
         fontSize: 16,
@@ -55,6 +58,7 @@ class AppTheme {
       showValueIndicator: ShowValueIndicator.never,
       trackShape: const RoundedRectSliderTrackShape(),
     ),
+
     iconTheme: IconThemeData(color: AppColors.grey, size: 48),
   );
 }

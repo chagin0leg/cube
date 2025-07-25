@@ -3,6 +3,8 @@ import 'dart:ui' as ui;
 import 'package:cube/crop_image_extension.dart';
 import 'package:cube/cube_status_text.dart';
 import 'package:cube/parallelepipeds_painter.dart';
+import 'package:cube/theme/theme_notifier.dart';
+import 'package:cube/theme/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
@@ -28,8 +30,10 @@ class ParallelepipedState {
 
 class _ParallelepipedsAppState extends State<ParallelepipedsApp>
     with SingleTickerProviderStateMixin {
-  ui.Image? baseImage;
-  List<List<ui.Image?>>? faceImagesList;
+  ui.Image? baseImageLight;
+  ui.Image? baseImageDark;
+  List<List<ui.Image?>>? faceImagesLight;
+  List<List<ui.Image?>>? faceImagesDark;
   bool imagesLoaded = false;
 
   double speedGlobY = 0;
@@ -90,40 +94,81 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
   }
 
   Future<void> _loadImages() async {
-    final wide = await _loadImage('assets/face_wide.drawio.png').crop();
-    final narrow = await _loadImage('assets/face_narrow.drawio.png').crop();
-    final base = await _loadImage('assets/base.drawio.png');
-    final wide_inside =
-        await _loadImage('assets/face_wide_inside.drawio.png').crop();
+    final wideLight =
+        await _loadImage('assets/light/face_wide.drawio.png').crop();
+    final narrowLight =
+        await _loadImage('assets/light/face_narrow.drawio.png').crop();
+    final baseLight = await _loadImage('assets/light/base.drawio.png');
+    final wideInsideLight =
+        await _loadImage('assets/light/face_wide_inside.drawio.png').crop();
+
+    final wideDark =
+        await _loadImage('assets/dark/face_wide.drawio.png').crop();
+    final narrowDark =
+        await _loadImage('assets/dark/face_narrow.drawio.png').crop();
+    final baseDark = await _loadImage('assets/dark/base.drawio.png');
+    final wideInsideDark =
+        await _loadImage('assets/dark/face_wide_inside.drawio.png').crop();
+
     setState(() {
-      baseImage = base;
-      faceImagesList = // Для каждого параллелепипеда свой набор граней
-          [
+      baseImageLight = baseLight;
+      faceImagesLight = [
+        // Для каждого параллелепипеда свой набор граней
         [
-          wide, // back
-          wide_inside, // front
-          narrow, // top
-          narrow, // bottom
-          narrow, // right
-          narrow, // left
+          wideLight, // back
+          wideInsideLight, // front
+          narrowLight, // top
+          narrowLight, // bottom
+          narrowLight, // right
+          narrowLight, // left
         ],
         [
-          wide_inside, // back
-          wide_inside, // front
-          narrow, // top
-          narrow, // bottom
-          narrow, // right
-          narrow, // left
+          wideInsideLight, // back
+          wideInsideLight, // front
+          narrowLight, // top
+          narrowLight, // bottom
+          narrowLight, // right
+          narrowLight, // left
         ],
         [
-          wide_inside, // back
-          wide, // front
-          narrow, // top
-          narrow, // bottom
-          narrow, // right
-          narrow, // left
+          wideInsideLight, // back
+          wideLight, // front
+          narrowLight, // top
+          narrowLight, // bottom
+          narrowLight, // right
+          narrowLight, // left
         ],
       ];
+
+      baseImageDark = baseDark;
+      faceImagesDark = [
+        // Для каждого параллелепипеда свой набор граней
+        [
+          wideDark, // back
+          wideInsideDark, // front
+          narrowDark, // top
+          narrowDark, // bottom
+          narrowDark, // right
+          narrowDark, // left
+        ],
+        [
+          wideInsideDark, // back
+          wideInsideDark, // front
+          narrowDark, // top
+          narrowDark, // bottom
+          narrowDark, // right
+          narrowDark, // left
+        ],
+        [
+          wideInsideDark, // back
+          wideDark, // front
+          narrowDark, // top
+          narrowDark, // bottom
+          narrowDark, // right
+          narrowDark, // left
+        ],
+      ];
+
       imagesLoaded = true;
     });
   }
@@ -167,6 +212,9 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
     final double vGlobY = speedGlobY;
     final double vZ1 = speedZ1;
     final double vZ2 = speedZ2;
+
+    ThemeNotifier notifier = ThemeProvider.of(context);
+
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -177,12 +225,19 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
                 children: [
                   !imagesLoaded
                       ? const Center(child: CircularProgressIndicator())
-                      : RawImage(image: baseImage!, width: 120),
+                      : RawImage(
+                        image:
+                            notifier.mode == ThemeMode.light
+                                ? baseImageLight
+                                : baseImageDark,
+                        width: 120,
+                      ),
                   Center(
                     child:
                         !imagesLoaded
                             ? const Center(child: CircularProgressIndicator())
                             : RepaintBoundary(
+                              key: ValueKey(notifier.mode),
                               child: CustomPaint(
                                 size: Size.infinite,
                                 painter: ParallelepipedsPainter(
@@ -190,7 +245,10 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
                                   globX: globX,
                                   globY: globY,
                                   globZ: globZ,
-                                  faceImagesList: faceImagesList!,
+                                  faceImagesList:
+                                      notifier.mode == ThemeMode.light
+                                          ? faceImagesLight!
+                                          : faceImagesDark!,
                                 ),
                               ),
                             ),
@@ -224,6 +282,7 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
           ],
         ),
       ),
+      floatingActionButton: _themeButton(),
     );
   }
 
@@ -233,4 +292,19 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
 
   Widget _buildSlider(double value, ValueChanged<double> onChanged) =>
       Slider(value: value, min: -180, max: 180, onChanged: onChanged);
+
+  Widget _themeButton() {
+    return InkWell(
+      onTap: () {
+        ThemeNotifier notifier = ThemeProvider.of(context);
+
+        if (notifier.mode == ThemeMode.light) {
+          notifier.setMode(ThemeMode.dark);
+        } else {
+          notifier.setMode(ThemeMode.light);
+        }
+      },
+      child: const Icon(Icons.brightness_6_outlined),
+    );
+  }
 }
