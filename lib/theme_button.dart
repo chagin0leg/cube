@@ -21,6 +21,7 @@ class ThemeButton extends StatelessWidget {
     return DropdownButton(
       value: _currentTheme,
       alignment: Alignment.centerLeft,
+      dropdownColor: Theme.of(context).scaffoldBackgroundColor,
       style: Theme.of(context).textTheme.titleSmall,
       elevation: 0,
       itemHeight: 50,
