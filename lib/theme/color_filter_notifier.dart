@@ -7,10 +7,68 @@ class ColorFilterNotifier extends ChangeNotifier {
     0, 0, 1, 0, 0, // B
     0, 0, 0, 1, 0, // A
   ]);
+  String _currentTheme = 'Light'; // TODO: брать из настроек
 
   ColorFilter get matrix => _matrix;
+  String get currentTheme => _currentTheme;
 
-  void setMatrix({
+  void setTheme(String theme) {
+    List<double> redChannel = [1, 0, 0, 0, 0];
+    List<double> greenChannel = [0, 1, 0, 0, 0];
+    List<double> blueChannel = [0, 0, 1, 0, 0];
+    List<double> alphaChannel = [0, 0, 0, 1, 0];
+
+    switch (theme) {
+      case 'Dark':
+        _currentTheme = 'Dark';
+        redChannel = [-1, 0, 0, 0, 255];
+        greenChannel = [0, -1, 0, 0, 255];
+        blueChannel = [0, 0, -1, 0, 255];
+        break;
+      case 'Marina':
+        _currentTheme = 'Marina';
+        redChannel = [0, 0, 0, 0, 0];
+        greenChannel = [0, 0, 0, 0, 0];
+        blueChannel = [0, 0, -1, 0, 255];
+        break;
+      case 'Radioactive':
+        _currentTheme = 'Radioactive';
+        redChannel = [-0.7, 0, 0.3, 0, 0];
+        greenChannel = [0.2, 0, 0.2, 0, 0];
+        blueChannel = [-0.5, 0, 0.7, 0, 0];
+        break;
+      case 'Bloody':
+        _currentTheme = 'Bloody';
+        greenChannel = [0.2, 0, 0, 0, 0];
+        blueChannel = [0.2, 0, 0, 0, 0];
+        break;
+      case 'Saint':
+        _currentTheme = 'Saint';
+        redChannel = [0.7, 0, 0.3, 0, 0];
+        greenChannel = [0.2, 0, 0.1, 0, 0];
+        blueChannel = [0.5, 0, 0.7, 0, 0];
+        break;
+      case 'Sporty':
+        _currentTheme = 'Sporty';
+        redChannel = [0.7, 0, 0.3, 0, 0];
+        greenChannel = [0.2, 0, 0.1, 0, 0];
+        blueChannel = [-0.5, 0, 0.7, 0, 0];
+        break;
+      case 'Light':
+      default:
+        _currentTheme = 'Light';
+        break;
+    }
+
+    _setMatrix(
+      alphaChannel: alphaChannel,
+      blueChannel: blueChannel,
+      greenChannel: greenChannel,
+      redChannel: redChannel,
+    );
+  }
+
+  void _setMatrix({
     List<double>? redChannel,
     List<double>? greenChannel,
     List<double>? blueChannel,

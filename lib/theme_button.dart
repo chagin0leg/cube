@@ -12,14 +12,12 @@ class ThemeButton extends StatelessWidget {
     'Sporty',
   ];
 
-  static String _currentTheme = 'Light';
-
   const ThemeButton({super.key});
 
   @override
   Widget build(BuildContext context) {
     return DropdownButton(
-      value: _currentTheme,
+      value: ColorFilterProvider.of(context).currentTheme,
       alignment: Alignment.centerLeft,
       dropdownColor: Theme.of(context).scaffoldBackgroundColor,
       style: Theme.of(context).textTheme.titleSmall,
@@ -32,57 +30,9 @@ class ThemeButton extends StatelessWidget {
           DropdownMenuItem(value: element, child: Text(element)),
       ],
       onChanged: (value) {
-        List<double> redChannel = [1, 0, 0, 0, 0];
-        List<double> greenChannel = [0, 1, 0, 0, 0];
-        List<double> blueChannel = [0, 0, 1, 0, 0];
-        List<double> alphaChannel = [0, 0, 0, 1, 0];
-
-        switch (value) {
-          case 'Dark':
-            _currentTheme = 'Dark';
-            redChannel = [-1, 0, 0, 0, 255];
-            greenChannel = [0, -1, 0, 0, 255];
-            blueChannel = [0, 0, -1, 0, 255];
-            break;
-          case 'Marina':
-            _currentTheme = 'Marina';
-            redChannel = [0, 0, 0, 0, 0];
-            greenChannel = [0, 0, 0, 0, 0];
-            blueChannel = [0, 0, -1, 0, 255];
-            break;
-          case 'Radioactive':
-            _currentTheme = 'Radioactive';
-            redChannel = [-0.7, 0, 0.3, 0, 0];
-            greenChannel = [0.2, 0, 0.2, 0, 0];
-            blueChannel = [-0.5, 0, 0.7, 0, 0];
-            break;
-          case 'Bloody':
-            _currentTheme = 'Bloody';
-            greenChannel = [0.2, 0, 0, 0, 0];
-            blueChannel = [0.2, 0, 0, 0, 0];
-            break;
-          case 'Saint':
-            _currentTheme = 'Saint';
-            redChannel = [0.7, 0, 0.3, 0, 0];
-            greenChannel = [0.2, 0, 0.1, 0, 0];
-            blueChannel = [0.5, 0, 0.7, 0, 0];
-          case 'Sporty':
-            _currentTheme = 'Sporty';
-            redChannel = [0.7, 0, 0.3, 0, 0];
-            greenChannel = [0.2, 0, 0.1, 0, 0];
-            blueChannel = [-0.5, 0, 0.7, 0, 0];
-          case 'Light':
-          default:
-            _currentTheme = 'Light';
-            break;
+        if (value != null) {
+          ColorFilterProvider.of(context).setTheme(value);
         }
-
-        ColorFilterProvider.of(context).setMatrix(
-          alphaChannel: alphaChannel,
-          blueChannel: blueChannel,
-          greenChannel: greenChannel,
-          redChannel: redChannel,
-        );
       },
     );
   }
