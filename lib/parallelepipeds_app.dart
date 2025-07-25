@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:cube/crop_image_extension.dart';
 import 'package:cube/cube_status_text.dart';
 import 'package:cube/parallelepipeds_painter.dart';
+import 'package:cube/theme_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
@@ -227,7 +228,7 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
           ],
         ),
       ),
-      // floatingActionButton: _themeButton(),
+      floatingActionButton: _themeButton(),
     );
   }
 
@@ -238,7 +239,7 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
   Widget _buildSlider(double value, ValueChanged<double> onChanged) =>
       Slider(value: value, min: -180, max: 180, onChanged: onChanged);
 
-  // Widget _themeButton() {
-  //   return ThemeButton();
-  // }
+  Widget _themeButton() {
+    return ThemeButton();
+  }
 }
