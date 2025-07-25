@@ -3,8 +3,6 @@ import 'dart:ui' as ui;
 import 'package:cube/crop_image_extension.dart';
 import 'package:cube/cube_status_text.dart';
 import 'package:cube/parallelepipeds_painter.dart';
-import 'package:cube/theme/color_filter_notifier.dart';
-import 'package:cube/theme/color_filter_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
@@ -33,7 +31,6 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
   ui.Image? baseImage;
   List<List<ui.Image?>>? faceImagesList;
   bool imagesLoaded = false;
-  late ColorFilterNotifier notifier;
 
   double speedGlobY = 0;
   double speedZ1 = 0;
@@ -54,16 +51,8 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
   }
 
   @override
-  void didChangeDependencies() {
-    notifier = ColorFilterProvider.of(context);
-
-    super.didChangeDependencies();
-  }
-
-  @override
   void dispose() {
     _ticker.dispose();
-    notifier.dispose();
     super.dispose();
   }
 
@@ -238,7 +227,7 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
           ],
         ),
       ),
-      floatingActionButton: _themeButton(),
+      // floatingActionButton: _themeButton(),
     );
   }
 
@@ -249,16 +238,7 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
   Widget _buildSlider(double value, ValueChanged<double> onChanged) =>
       Slider(value: value, min: -180, max: 180, onChanged: onChanged);
 
-  Widget _themeButton() {
-    return InkWell(
-      onTap: () {
-        notifier.setMatrix(
-          redChannel: [-1, 0, 0, 0, 255],
-          greenChannel: [0, -1, 0, 0, 255],
-          blueChannel: [0, 0, -1, 0, 255],
-        );
-      },
-      child: const Icon(Icons.brightness_6_outlined),
-    );
-  }
+  // Widget _themeButton() {
+  //   return ThemeButton();
+  // }
 }

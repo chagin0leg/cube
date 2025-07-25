@@ -6,6 +6,7 @@ class AppTheme {
 
   static final ThemeData light = ThemeData(
     scaffoldBackgroundColor: AppColors.platinum,
+    splashFactory: NoSplash.splashFactory,
     textTheme: TextTheme(
       titleSmall: TextStyle(
         fontSize: 16,
