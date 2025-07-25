@@ -30,35 +30,4 @@ class AppTheme {
     ),
     iconTheme: IconThemeData(color: AppColors.grey, size: 48),
   );
-
-  static final ThemeData dark = ThemeData(
-    scaffoldBackgroundColor: AppColors.darkPlatinum,
-    splashColor: AppColors.transparent,
-    highlightColor: AppColors.transparent,
-    hoverColor: AppColors.transparent,
-    textTheme: TextTheme(
-      titleSmall: TextStyle(
-        fontSize: 16,
-        color: AppColors.platinum,
-        fontFamily: 'RobotoMono',
-        fontWeight: FontWeight.w700,
-        letterSpacing: 1,
-      ),
-    ),
-    sliderTheme: SliderThemeData(
-      trackHeight: 2,
-      activeTrackColor: AppColors.grey,
-      inactiveTrackColor: AppColors.lightGrey,
-      thumbColor: AppColors.grey,
-      overlayColor: AppColors.transparent,
-      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 14),
-      overlayShape: const RoundSliderOverlayShape(overlayRadius: 20),
-      tickMarkShape: SliderTickMarkShape.noTickMark,
-      valueIndicatorShape: SliderComponentShape.noOverlay,
-      showValueIndicator: ShowValueIndicator.never,
-      trackShape: const RoundedRectSliderTrackShape(),
-    ),
-
-    iconTheme: IconThemeData(color: AppColors.grey, size: 48),
-  );
 }
