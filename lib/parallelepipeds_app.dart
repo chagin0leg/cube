@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:cube/crop_image_extension.dart';
 import 'package:cube/cube_status_text.dart';
 import 'package:cube/parallelepipeds_painter.dart';
+import 'package:cube/theme_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
@@ -93,30 +94,31 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
     final wide = await _loadImage('assets/face_wide.drawio.png').crop();
     final narrow = await _loadImage('assets/face_narrow.drawio.png').crop();
     final base = await _loadImage('assets/base.drawio.png');
-    final wide_inside =
+    final wideInside =
         await _loadImage('assets/face_wide_inside.drawio.png').crop();
+
     setState(() {
       baseImage = base;
-      faceImagesList = // Для каждого параллелепипеда свой набор граней
-          [
+      faceImagesList = [
+        // Для каждого параллелепипеда свой набор граней
         [
           wide, // back
-          wide_inside, // front
+          wideInside, // front
           narrow, // top
           narrow, // bottom
           narrow, // right
           narrow, // left
         ],
         [
-          wide_inside, // back
-          wide_inside, // front
+          wideInside, // back
+          wideInside, // front
           narrow, // top
           narrow, // bottom
           narrow, // right
           narrow, // left
         ],
         [
-          wide_inside, // back
+          wideInside, // back
           wide, // front
           narrow, // top
           narrow, // bottom
@@ -124,6 +126,7 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
           narrow, // left
         ],
       ];
+
       imagesLoaded = true;
     });
   }
@@ -167,6 +170,7 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
     final double vGlobY = speedGlobY;
     final double vZ1 = speedZ1;
     final double vZ2 = speedZ2;
+
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -224,35 +228,18 @@ class _ParallelepipedsAppState extends State<ParallelepipedsApp>
           ],
         ),
       ),
+      floatingActionButton: _themeButton(),
     );
   }
 
   Widget _resetButton() {
-    return InkWell(
-      onTap: _reset,
-      child: const Icon(
-        Icons.stop_circle_rounded,
-        size: 48,
-        color: Color(0xFF757575),
-      ),
-    );
+    return InkWell(onTap: _reset, child: const Icon(Icons.stop_circle_rounded));
   }
 
   Widget _buildSlider(double value, ValueChanged<double> onChanged) =>
-      SliderTheme(
-        data: SliderTheme.of(context).copyWith(
-          trackHeight: 2,
-          activeTrackColor: const Color(0xFF757575),
-          inactiveTrackColor: const Color(0xFFBABABA),
-          thumbColor: const Color(0xFF757575),
-          overlayColor: const Color(0x00BABABA),
-          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 14),
-          overlayShape: const RoundSliderOverlayShape(overlayRadius: 20),
-          tickMarkShape: SliderTickMarkShape.noTickMark,
-          valueIndicatorShape: SliderComponentShape.noOverlay,
-          showValueIndicator: ShowValueIndicator.never,
-          trackShape: const RoundedRectSliderTrackShape(),
-        ),
-        child: Slider(value: value, min: -180, max: 180, onChanged: onChanged),
-      );
+      Slider(value: value, min: -180, max: 180, onChanged: onChanged);
+
+  Widget _themeButton() {
+    return ThemeButton();
+  }
 }

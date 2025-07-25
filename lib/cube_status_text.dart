@@ -91,14 +91,7 @@ class _CubeStatusTextState extends State<CubeStatusText>
     final status = _displayed;
     return Text(
       'The Cube: $status${_show ? '_' : ' '}',
-      style: const TextStyle(
-        fontSize: 16,
-        color: Color(0xFF454545),
-        fontFamily: 'RobotoMono',
-        fontWeight: FontWeight.w700,
-        letterSpacing: 1,
-        backgroundColor: Color(0xFFEAEAEA),
-      ),
+      style: Theme.of(context).textTheme.titleSmall,
     );
   }
 }
