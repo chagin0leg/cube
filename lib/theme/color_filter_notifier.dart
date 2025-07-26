@@ -62,7 +62,7 @@ class ColorFilterNotifier extends ChangeNotifier {
     _filter = ColorFilter.matrix(_currentTheme._matrix);
   }
 
-  ColorFilter get matrix => _filter;
+  ColorFilter get filter => _filter;
   MyTheme get currentTheme => _currentTheme;
 
   void setTheme(MyTheme theme) {
