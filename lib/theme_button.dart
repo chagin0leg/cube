@@ -1,3 +1,4 @@
+import 'package:cube/theme/app_colors.dart';
 import 'package:cube/theme/color_filter_notifier.dart';
 import 'package:cube/theme/color_filter_provider.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +12,8 @@ class ThemeButton extends StatelessWidget {
       value: ColorFilterProvider.of(context).currentTheme,
       alignment: Alignment.centerLeft,
       dropdownColor: Theme.of(context).scaffoldBackgroundColor,
+      focusColor: AppColors.transparent,
+      underline: SizedBox(),
       style: Theme.of(context).textTheme.titleSmall,
       elevation: 0,
       itemHeight: 50,
