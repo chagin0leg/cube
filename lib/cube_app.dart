@@ -17,7 +17,7 @@ class CubeApp extends StatelessWidget {
         animation: _colorFilterNotifier,
         builder: (context, _) {
           return ColorFiltered(
-            colorFilter: _colorFilterNotifier.matrix,
+            colorFilter: _colorFilterNotifier.filter,
             child: MaterialApp(
               debugShowCheckedModeBanner: false,
               theme: AppTheme.light,
