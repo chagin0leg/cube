@@ -14,19 +14,6 @@ class CubePage extends StatefulWidget {
   State<CubePage> createState() => _CubePageState();
 }
 
-class ParallelepipedState {
-  double rotateX, rotateY, rotateZ, moveX, moveY, moveZ;
-  ParallelepipedState({
-    // Углы вращения для изометрической проекции
-    this.rotateX = 90 - 35.264, // 30 градусов от горизонтали
-    this.rotateY = 45, // 45 градусов от вертикали
-    this.rotateZ = 0, // Не требуется вращение вокруг оси Z
-    this.moveX = 0,
-    this.moveY = 0,
-    this.moveZ = 0,
-  });
-}
-
 class _CubePageState extends State<CubePage>
     with SingleTickerProviderStateMixin {
   ui.Image? baseImage;

@@ -1,11 +1,23 @@
 import 'dart:ui' as ui;
 
-import 'package:cube/cube_page.dart';
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
 
 // Размеры параллелепипеда (3:3:1)
 const double w = 180, h = 180, d = 60;
+
+class ParallelepipedState {
+  double rotateX, rotateY, rotateZ, moveX, moveY, moveZ;
+  ParallelepipedState({
+    // Углы вращения для изометрической проекции
+    this.rotateX = 90 - 35.264, // 30 градусов от горизонтали
+    this.rotateY = 45, // 45 градусов от вертикали
+    this.rotateZ = 0, // Не требуется вращение вокруг оси Z
+    this.moveX = 0,
+    this.moveY = 0,
+    this.moveZ = 0,
+  });
+}
 
 class ParallelepipedsPainter extends CustomPainter {
   final List<ParallelepipedState> cubes;
