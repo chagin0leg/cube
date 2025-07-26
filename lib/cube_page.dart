@@ -7,11 +7,11 @@ import 'package:cube/theme_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
-class ParallelepipedsApp extends StatefulWidget {
-  const ParallelepipedsApp({super.key});
+class CubePage extends StatefulWidget {
+  const CubePage({super.key});
 
   @override
-  State<ParallelepipedsApp> createState() => _ParallelepipedsAppState();
+  State<CubePage> createState() => _CubePageState();
 }
 
 class ParallelepipedState {
@@ -27,7 +27,7 @@ class ParallelepipedState {
   });
 }
 
-class _ParallelepipedsAppState extends State<ParallelepipedsApp>
+class _CubePageState extends State<CubePage>
     with SingleTickerProviderStateMixin {
   ui.Image? baseImage;
   List<List<ui.Image?>>? faceImagesList;

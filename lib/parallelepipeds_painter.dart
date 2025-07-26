@@ -1,6 +1,6 @@
 import 'dart:ui' as ui;
 
-import 'package:cube/parallelepipeds_app.dart';
+import 'package:cube/cube_page.dart';
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
 

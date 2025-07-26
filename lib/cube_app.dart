@@ -1,4 +1,4 @@
-import 'package:cube/parallelepipeds_app.dart';
+import 'package:cube/cube_page.dart';
 import 'package:cube/theme/app_theme.dart';
 import 'package:cube/theme/color_filter_notifier.dart';
 import 'package:cube/theme/color_filter_provider.dart';
@@ -21,7 +21,7 @@ class CubeApp extends StatelessWidget {
             child: MaterialApp(
               debugShowCheckedModeBanner: false,
               theme: AppTheme.light,
-              home: ParallelepipedsApp(),
+              home: CubePage(),
             ),
           );
         },
