@@ -1,17 +1,8 @@
+import 'package:cube/theme/color_filter_notifier.dart';
 import 'package:cube/theme/color_filter_provider.dart';
 import 'package:flutter/material.dart';
 
 class ThemeButton extends StatelessWidget {
-  static const List<String> _themes = [
-    'Light',
-    'Dark',
-    'Marina',
-    'Radioactive',
-    'Bloody',
-    'Saint',
-    'Sporty',
-  ];
-
   const ThemeButton({super.key});
 
   @override
@@ -25,10 +16,15 @@ class ThemeButton extends StatelessWidget {
       itemHeight: 50,
       menuMaxHeight: 150,
       menuWidth: 150,
-      items: [
-        for (String element in _themes)
-          DropdownMenuItem(value: element, child: Text(element)),
-      ],
+      items:
+          MyTheme.values
+              .map(
+                (element) => DropdownMenuItem(
+                  value: element,
+                  child: Text(element.toString()),
+                ),
+              )
+              .toList(),
       onChanged: (value) {
         if (value != null) {
           ColorFilterProvider.of(context).setTheme(value);

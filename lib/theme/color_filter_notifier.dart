@@ -1,97 +1,78 @@
 import 'package:flutter/material.dart';
 
-class ColorFilterNotifier extends ChangeNotifier {
-  ColorFilter _matrix = ColorFilter.matrix([
+enum MyTheme {
+  light('Light', [
     1, 0, 0, 0, 0, // R
     0, 1, 0, 0, 0, // G
     0, 0, 1, 0, 0, // B
     0, 0, 0, 1, 0, // A
+  ]),
+  dark('Dark', [
+    -1, 0, 0, 0, 255, // R
+    0, -1, 0, 0, 255, // G
+    0, 0, -1, 0, 255, // B
+    0, 0, 0, 1, 0, // A
+  ]),
+  marina('Marina', [
+    0, 0, 0, 0, 0, // R
+    0, 0, 0, 0, 0, // G
+    0, 0, -1, 0, 255, // B
+    0, 0, 0, 1, 0, // A
+  ]),
+  radioactive('Radioactive', [
+    -0.7, 0, 0.3, 0, 0, // R
+    0.2, 0, 0.2, 0, 0, // G
+    0, 0, 1, 0, 0, // B
+    -0.5, 0, 0.7, 0, 0, // A
+  ]),
+  bloody('Bloody', [
+    1, 0, 0, 0, 0, // R
+    0.2, 0, 0, 0, 0, // G
+    0.2, 0, 0, 0, 0, // B
+    0, 0, 0, 1, 0, // A
+  ]),
+  saint('Saint', [
+    0.7, 0, 0.3, 0, 0, // R
+    0.2, 0, 0.1, 0, 0, // G
+    0.5, 0, 0.7, 0, 0, // B
+    0, 0, 0, 1, 0, // A
+  ]),
+  sporty('Sporty', [
+    0.7, 0, 0.3, 0, 0, // R
+    0.2, 0, 0.1, 0, 0, // G
+    -0.5, 0, 0.7, 0, 0, // B
+    0, 0, 0, 1, 0, // A
   ]);
-  String _currentTheme = 'Light'; // TODO: брать из настроек
 
-  ColorFilter get matrix => _matrix;
-  String get currentTheme => _currentTheme;
+  final String _name;
+  final List<double> _matrix;
 
-  void setTheme(String theme) {
-    List<double> redChannel = [1, 0, 0, 0, 0];
-    List<double> greenChannel = [0, 1, 0, 0, 0];
-    List<double> blueChannel = [0, 0, 1, 0, 0];
-    List<double> alphaChannel = [0, 0, 0, 1, 0];
+  @override
+  String toString() => _name;
 
-    switch (theme) {
-      case 'Dark':
-        _currentTheme = 'Dark';
-        redChannel = [-1, 0, 0, 0, 255];
-        greenChannel = [0, -1, 0, 0, 255];
-        blueChannel = [0, 0, -1, 0, 255];
-        break;
-      case 'Marina':
-        _currentTheme = 'Marina';
-        redChannel = [0, 0, 0, 0, 0];
-        greenChannel = [0, 0, 0, 0, 0];
-        blueChannel = [0, 0, -1, 0, 255];
-        break;
-      case 'Radioactive':
-        _currentTheme = 'Radioactive';
-        redChannel = [-0.7, 0, 0.3, 0, 0];
-        greenChannel = [0.2, 0, 0.2, 0, 0];
-        blueChannel = [-0.5, 0, 0.7, 0, 0];
-        break;
-      case 'Bloody':
-        _currentTheme = 'Bloody';
-        greenChannel = [0.2, 0, 0, 0, 0];
-        blueChannel = [0.2, 0, 0, 0, 0];
-        break;
-      case 'Saint':
-        _currentTheme = 'Saint';
-        redChannel = [0.7, 0, 0.3, 0, 0];
-        greenChannel = [0.2, 0, 0.1, 0, 0];
-        blueChannel = [0.5, 0, 0.7, 0, 0];
-        break;
-      case 'Sporty':
-        _currentTheme = 'Sporty';
-        redChannel = [0.7, 0, 0.3, 0, 0];
-        greenChannel = [0.2, 0, 0.1, 0, 0];
-        blueChannel = [-0.5, 0, 0.7, 0, 0];
-        break;
-      case 'Light':
-      default:
-        _currentTheme = 'Light';
-        break;
-    }
+  const MyTheme(this._name, this._matrix);
+}
 
-    _setMatrix(
-      alphaChannel: alphaChannel,
-      blueChannel: blueChannel,
-      greenChannel: greenChannel,
-      redChannel: redChannel,
-    );
+class ColorFilterNotifier extends ChangeNotifier {
+  late MyTheme _currentTheme;
+  late ColorFilter _filter;
+
+  ColorFilterNotifier() {
+    _currentTheme = MyTheme.light; // TODO: брать из настроек
+    _filter = ColorFilter.matrix(_currentTheme._matrix);
   }
 
-  void _setMatrix({
-    List<double>? redChannel,
-    List<double>? greenChannel,
-    List<double>? blueChannel,
-    List<double>? alphaChannel,
-  }) {
-    assert(
-      (redChannel == null || redChannel.length == 5) &&
-          (greenChannel == null || greenChannel.length == 5) &&
-          (blueChannel == null || blueChannel.length == 5) &&
-          (alphaChannel == null || alphaChannel.length == 5),
-      "ColorFilter channel length is not equal to 5",
-    );
+  ColorFilter get matrix => _filter;
+  MyTheme get currentTheme => _currentTheme;
 
-    ColorFilter newMatrix = _matrix;
-    newMatrix = ColorFilter.matrix([
-      ...redChannel ?? [1, 0, 0, 0, 0], // R
-      ...greenChannel ?? [0, 1, 0, 0, 0], // G
-      ...blueChannel ?? [0, 0, 1, 0, 0], // B
-      ...alphaChannel ?? [0, 0, 0, 1, 0], // A
-    ]);
+  void setTheme(MyTheme theme) {
+    _currentTheme = theme;
+    _setColorFilter(ColorFilter.matrix(_currentTheme._matrix));
+  }
 
-    if (newMatrix != _matrix) {
-      _matrix = newMatrix;
+  void _setColorFilter(ColorFilter filter) {
+    if (filter != _filter) {
+      _filter = filter;
       notifyListeners();
     }
   }
