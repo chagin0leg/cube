@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
 
 // Размеры параллелепипеда (3:3:1)
-const double w = 180, h = 180, d = 60;
+const double width = 180, height = 180, depth = 60;
 
 class ParallelepipedState {
   double rotateX, rotateY, rotateZ, moveX, moveY, moveZ;
@@ -22,13 +22,13 @@ class ParallelepipedState {
 class ParallelepipedsPainter extends CustomPainter {
   final List<ParallelepipedState> cubes;
   final double globX, globY, globZ;
-  final List<List<ui.Image?>> faceImagesList;
+  final List<List<ui.Image?>> faceImages;
   ParallelepipedsPainter({
     required this.cubes,
     required this.globX,
     required this.globY,
     required this.globZ,
-    required this.faceImagesList,
+    required this.faceImages,
   });
 
   // Центры для трёх параллелепипедов
@@ -40,14 +40,14 @@ class ParallelepipedsPainter extends CustomPainter {
 
   // Вершины параллелепипеда (относительно центра)
   List<vm.Vector3> getVertices() => [
-    vm.Vector3(-w / 2, -h / 2, -d / 2),
-    vm.Vector3(w / 2, -h / 2, -d / 2),
-    vm.Vector3(w / 2, h / 2, -d / 2),
-    vm.Vector3(-w / 2, h / 2, -d / 2),
-    vm.Vector3(-w / 2, -h / 2, d / 2),
-    vm.Vector3(w / 2, -h / 2, d / 2),
-    vm.Vector3(w / 2, h / 2, d / 2),
-    vm.Vector3(-w / 2, h / 2, d / 2),
+    vm.Vector3(-width / 2, -height / 2, -depth / 2),
+    vm.Vector3(width / 2, -height / 2, -depth / 2),
+    vm.Vector3(width / 2, height / 2, -depth / 2),
+    vm.Vector3(-width / 2, height / 2, -depth / 2),
+    vm.Vector3(-width / 2, -height / 2, depth / 2),
+    vm.Vector3(width / 2, -height / 2, depth / 2),
+    vm.Vector3(width / 2, height / 2, depth / 2),
+    vm.Vector3(-width / 2, height / 2, depth / 2),
   ];
 
   final List<List<int>> faces = const [
@@ -104,7 +104,7 @@ class ParallelepipedsPainter extends CustomPainter {
       ];
       faceDepths.sort((a, b) => a.depth.compareTo(b.depth));
       // --- Используем индивидуальные картинки граней ---
-      final List<ui.Image?> faceImages = faceImagesList[i];
+      final List<ui.Image?> faceImages = this.faceImages[i];
       for (final fd in faceDepths) {
         final path =
             Path()..moveTo(

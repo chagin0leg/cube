@@ -17,7 +17,7 @@ class CubePage extends StatefulWidget {
 class _CubePageState extends State<CubePage>
     with SingleTickerProviderStateMixin {
   ui.Image? baseImage;
-  List<List<ui.Image?>>? faceImagesList;
+  List<List<ui.Image?>>? faceImages;
   bool imagesLoaded = false;
 
   double speedGlobY = 0;
@@ -62,15 +62,15 @@ class _CubePageState extends State<CubePage>
   }
 
   void _onTick(Duration _) {
+    const double period = 6.0;
     final now = DateTime.now();
     final dt = now.difference(_lastTick).inMilliseconds / 1000.0;
-    const double per = 6.0;
     _lastTick = now;
     if (speedGlobY != 0 || speedZ1 != 0 || speedZ2 != 0) {
       setState(() {
-        globY = _wrap(globY + speedGlobY * dt / per);
-        cubes[1].rotateZ = _wrap(cubes[1].rotateZ + speedZ1 * dt / per);
-        cubes[2].rotateZ = _wrap(cubes[2].rotateZ + speedZ2 * dt / per);
+        globY = _wrap(globY + speedGlobY * dt / period);
+        cubes[1].rotateZ = _wrap(cubes[1].rotateZ + speedZ1 * dt / period);
+        cubes[2].rotateZ = _wrap(cubes[2].rotateZ + speedZ2 * dt / period);
       });
     } else {
       _updateTicker();
@@ -86,7 +86,7 @@ class _CubePageState extends State<CubePage>
 
     setState(() {
       baseImage = base;
-      faceImagesList = [
+      faceImages = [
         // Для каждого параллелепипеда свой набор граней
         [
           wide, // back
@@ -140,9 +140,9 @@ class _CubePageState extends State<CubePage>
       globX = 0;
       globY = 0;
       globZ = 0;
-      cubes[0].moveZ = -d;
+      cubes[0].moveZ = -depth;
       cubes[1].moveZ = 0;
-      cubes[2].moveZ = d;
+      cubes[2].moveZ = depth;
       cubes[0].rotateZ = 0;
       cubes[1].rotateZ = 0;
       cubes[2].rotateZ = 0;
@@ -187,7 +187,7 @@ class _CubePageState extends State<CubePage>
                                   globX: globX,
                                   globY: globY,
                                   globZ: globZ,
-                                  faceImagesList: faceImagesList!,
+                                  faceImages: faceImages!,
                                 ),
                               ),
                             ),
@@ -220,7 +220,7 @@ class _CubePageState extends State<CubePage>
           ],
         ),
       ),
-      floatingActionButton: _themeButton(),
+      floatingActionButton: ThemeButton(),
     );
   }
 
@@ -230,8 +230,4 @@ class _CubePageState extends State<CubePage>
 
   Widget _buildSlider(double value, ValueChanged<double> onChanged) =>
       Slider(value: value, min: -180, max: 180, onChanged: onChanged);
-
-  Widget _themeButton() {
-    return ThemeButton();
-  }
 }
