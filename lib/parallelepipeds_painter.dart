@@ -1,32 +1,20 @@
 import 'dart:ui' as ui;
 
+import 'package:cube/figure_state.dart';
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
 
 // Размеры параллелепипеда (3:3:1)
 const double width = 180, height = 180, depth = 60;
 
-class ParallelepipedState {
-  double rotateX, rotateY, rotateZ, moveX, moveY, moveZ;
-  ParallelepipedState({
-    // Углы вращения для изометрической проекции
-    this.rotateX = 90 - 35.264, // 30 градусов от горизонтали
-    this.rotateY = 45, // 45 градусов от вертикали
-    this.rotateZ = 0, // Не требуется вращение вокруг оси Z
-    this.moveX = 0,
-    this.moveY = 0,
-    this.moveZ = 0,
-  });
-}
-
-class ParallelepipedsPainter extends CustomPainter {
-  final List<ParallelepipedState> cubes;
-  final double globX, globY, globZ;
+class EdgesPainter extends CustomPainter {
+  final List<EdgeState> edges;
+  final double rotationAngleX, rotationAngleY, globZ;
   final List<List<ui.Image?>> faceImages;
-  ParallelepipedsPainter({
-    required this.cubes,
-    required this.globX,
-    required this.globY,
+  EdgesPainter({
+    required this.edges,
+    required this.rotationAngleX,
+    required this.rotationAngleY,
     required this.globZ,
     required this.faceImages,
   });
@@ -70,21 +58,22 @@ class ParallelepipedsPainter extends CustomPainter {
     // Глобальная матрица вращения
     final Matrix4 global =
         Matrix4.identity()
-          ..rotateX(vm.radians(globX))
-          ..rotateY(vm.radians(globY))
+          ..rotateX(vm.radians(rotationAngleX))
+          ..rotateY(vm.radians(rotationAngleY))
           ..rotateZ(vm.radians(globZ));
 
-    late List<int> order = inSector(globY, 210, 30) ? [0, 1, 2] : [2, 1, 0];
+    late List<int> order =
+        inSector(rotationAngleY, 210, 30) ? [0, 1, 2] : [2, 1, 0];
 
     for (int i in order) {
-      final ParallelepipedState state = cubes[i];
+      final EdgeState state = edges[i];
       // Локальная матрица: вращение и сдвиг вдоль своей оси (Z)
       final Matrix4 local =
           Matrix4.identity()
-            ..rotateX(vm.radians(state.rotateX))
-            ..rotateY(vm.radians(state.rotateY))
-            ..rotateZ(vm.radians(state.rotateZ))
-            ..translate(state.moveX, state.moveY, state.moveZ);
+            ..rotateX(vm.radians(state.oX.rotationAngle))
+            ..rotateY(vm.radians(state.oY.rotationAngle))
+            ..rotateZ(vm.radians(state.oZ.rotationAngle))
+            ..translate(state.oX.offset, state.oY.offset, state.oZ.offset);
       // Центр параллелепипеда
       final Matrix4 model =
           Matrix4.identity()
@@ -162,24 +151,24 @@ class ParallelepipedsPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant ParallelepipedsPainter oldDelegate) {
+  bool shouldRepaint(covariant EdgesPainter oldDelegate) {
     bool cubesChanged = false;
-    for (int i = 0; i < cubes.length; i++) {
-      final c = cubes[i];
-      final o = oldDelegate.cubes[i];
-      if (c.rotateX != o.rotateX ||
-          c.rotateY != o.rotateY ||
-          c.rotateZ != o.rotateZ ||
-          c.moveX != o.moveX ||
-          c.moveY != o.moveY ||
-          c.moveZ != o.moveZ) {
+    for (int i = 0; i < edges.length; i++) {
+      final c = edges[i];
+      final o = oldDelegate.edges[i];
+      if (c.oX.rotationAngle != o.oX.rotationAngle ||
+          c.oY.rotationAngle != o.oY.rotationAngle ||
+          c.oZ.rotationAngle != o.oZ.rotationAngle ||
+          c.oX.offset != o.oX.offset ||
+          c.oY.offset != o.oY.offset ||
+          c.oZ.offset != o.oZ.offset) {
         cubesChanged = true;
         break;
       }
     }
     return cubesChanged ||
-        globX != oldDelegate.globX ||
-        globY != oldDelegate.globY ||
+        rotationAngleX != oldDelegate.rotationAngleX ||
+        rotationAngleY != oldDelegate.rotationAngleY ||
         globZ != oldDelegate.globZ;
   }
 }

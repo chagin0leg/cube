@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 
 import 'package:cube/crop_image_extension.dart';
 import 'package:cube/cube_status_text.dart';
+import 'package:cube/figure_state.dart';
 import 'package:cube/parallelepipeds_painter.dart';
 import 'package:cube/theme_button.dart';
 import 'package:flutter/material.dart';
@@ -20,12 +21,8 @@ class _CubePageState extends State<CubePage>
   List<List<ui.Image?>>? faceImages;
   bool imagesLoaded = false;
 
-  // Глобальное вращение (XYZ)
-  double globX = 0, globY = 0, globZ = 0;
-
-  double speedGlobY = 0;
-  double speedZ1 = 0;
-  double speedZ2 = 0;
+  double cubeRotationAngleX = 0, cubeRotationAngleY = 0, cubeRotationAngleZ = 0;
+  double cubeRotationSpeedX = 0, cubeRotationSpeedY = 0, cubeRotationSpeedZ = 0;
 
   late final Ticker _ticker;
   late DateTime _lastTick;
@@ -56,10 +53,15 @@ class _CubePageState extends State<CubePage>
   }
 
   bool hasRotationSpeed() {
-    return speedGlobY != 0 || speedZ1 != 0 || speedZ2 != 0;
+    return cubeRotationSpeedX != 0 ||
+        cubeRotationSpeedY != 0 ||
+        cubeRotationSpeedZ != 0 ||
+        edges[0].oZ.rotationSpeed != 0 ||
+        edges[1].oZ.rotationSpeed != 0 ||
+        edges[2].oZ.rotationSpeed != 0;
   }
 
-  double _wrap(double angle) {
+  double _normalizeAngle(double angle) {
     angle = angle % 360.0;
     if (angle < 0) angle += 360.0;
     return angle;
@@ -72,9 +74,19 @@ class _CubePageState extends State<CubePage>
     _lastTick = now;
     if (hasRotationSpeed()) {
       setState(() {
-        globY = _wrap(globY + speedGlobY * dt / period);
-        cubes[1].rotateZ = _wrap(cubes[1].rotateZ + speedZ1 * dt / period);
-        cubes[2].rotateZ = _wrap(cubes[2].rotateZ + speedZ2 * dt / period);
+        cubeRotationAngleX = _normalizeAngle(
+          cubeRotationAngleX + cubeRotationSpeedX * dt / period,
+        );
+        cubeRotationAngleY = _normalizeAngle(
+          cubeRotationAngleY + cubeRotationSpeedY * dt / period,
+        );
+        cubeRotationAngleZ = _normalizeAngle(
+          cubeRotationAngleZ + cubeRotationSpeedZ * dt / period,
+        );
+
+        edges[0].oZ.calculateRotationAngle(dt);
+        edges[1].oZ.calculateRotationAngle(dt);
+        edges[2].oZ.calculateRotationAngle(dt);
       });
     } else {
       _updateTicker();
@@ -130,35 +142,35 @@ class _CubePageState extends State<CubePage>
   }
 
   // Состояния для каждого параллелепипеда
-  final List<ParallelepipedState> cubes = [
-    ParallelepipedState(),
-    ParallelepipedState(),
-    ParallelepipedState(),
+  final List<EdgeState> edges = [
+    EdgeState(oZ: AxisState(offset: -depth)), // [Zhuravlev] нижний левый (Z0)
+    EdgeState(), // [Zhuravlev] средний (Z1)
+    EdgeState(oZ: AxisState(offset: depth)), // [Zhuravlev] верхний правый (Z2)
   ];
 
   void _reset() {
     setState(() {
-      globX = 0;
-      globY = 0;
-      globZ = 0;
-      cubes[0].moveZ = -depth;
-      cubes[1].moveZ = 0;
-      cubes[2].moveZ = depth;
-      cubes[0].rotateZ = 0;
-      cubes[1].rotateZ = 0;
-      cubes[2].rotateZ = 0;
-      speedGlobY = 0;
-      speedZ1 = 0;
-      speedZ2 = 0;
+      cubeRotationAngleX = 0;
+      cubeRotationAngleY = 0;
+      cubeRotationAngleZ = 0;
+      cubeRotationSpeedX = 0;
+      cubeRotationSpeedY = 0;
+      cubeRotationSpeedZ = 0;
+
+      edges[0].oZ.offset = -depth;
+      edges[1].oZ.offset = 0;
+      edges[2].oZ.offset = depth;
+      edges[0].oZ.rotationAngle = 0;
+      edges[1].oZ.rotationAngle = 0;
+      edges[2].oZ.rotationAngle = 0;
+      edges[0].oZ.rotationSpeed = 0;
+      edges[1].oZ.rotationSpeed = 0;
+      edges[2].oZ.rotationSpeed = 0;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final double vGlobY = speedGlobY;
-    final double vZ1 = speedZ1;
-    final double vZ2 = speedZ2;
-
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -183,11 +195,11 @@ class _CubePageState extends State<CubePage>
                             child: RepaintBoundary(
                               child: CustomPaint(
                                 size: Size.infinite,
-                                painter: ParallelepipedsPainter(
-                                  cubes: cubes,
-                                  globX: globX,
-                                  globY: globY,
-                                  globZ: globZ,
+                                painter: EdgesPainter(
+                                  edges: edges,
+                                  rotationAngleX: cubeRotationAngleX,
+                                  rotationAngleY: cubeRotationAngleY,
+                                  globZ: cubeRotationAngleZ,
                                   faceImages: faceImages!,
                                 ),
                               ),
@@ -203,16 +215,28 @@ class _CubePageState extends State<CubePage>
                 mainAxisSize: MainAxisSize.min,
                 spacing: 8,
                 children: [
-                  _buildSlider(vGlobY, (v) {
-                    setState(() => speedGlobY = v);
+                  _buildSlider(cubeRotationSpeedX, (value) {
+                    setState(() => cubeRotationSpeedX = value);
                     _updateTicker();
                   }),
-                  _buildSlider(vZ1, (v) {
-                    setState(() => speedZ1 = v);
+                  _buildSlider(cubeRotationSpeedY, (value) {
+                    setState(() => cubeRotationSpeedY = value);
                     _updateTicker();
                   }),
-                  _buildSlider(vZ2, (v) {
-                    setState(() => speedZ2 = v);
+                  _buildSlider(cubeRotationSpeedZ, (value) {
+                    setState(() => cubeRotationSpeedZ = value);
+                    _updateTicker();
+                  }),
+                  _buildSlider(edges[0].oZ.rotationSpeed, (value) {
+                    setState(() => edges[0].oZ.rotationSpeed = value);
+                    _updateTicker();
+                  }),
+                  _buildSlider(edges[1].oZ.rotationSpeed, (value) {
+                    setState(() => edges[1].oZ.rotationSpeed = value);
+                    _updateTicker();
+                  }),
+                  _buildSlider(edges[2].oZ.rotationSpeed, (value) {
+                    setState(() => edges[2].oZ.rotationSpeed = value);
                     _updateTicker();
                   }),
                 ],
