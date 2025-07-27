@@ -20,13 +20,15 @@ class _CubePageState extends State<CubePage>
   List<List<ui.Image?>>? faceImages;
   bool imagesLoaded = false;
 
+  // Глобальное вращение (XYZ)
+  double globX = 0, globY = 0, globZ = 0;
+
   double speedGlobY = 0;
   double speedZ1 = 0;
   double speedZ2 = 0;
 
   late final Ticker _ticker;
   late DateTime _lastTick;
-  bool _tickerActive = false;
 
   @override
   void initState() {
@@ -45,14 +47,16 @@ class _CubePageState extends State<CubePage>
   }
 
   void _updateTicker() {
-    final needTicker = speedGlobY != 0 || speedZ1 != 0 || speedZ2 != 0;
-    if (needTicker && !_tickerActive) {
+    final needTicker = hasRotationSpeed();
+    if (needTicker && !_ticker.isActive) {
       _ticker.start();
-      _tickerActive = true;
-    } else if (!needTicker && _tickerActive) {
+    } else if (!needTicker && _ticker.isActive) {
       _ticker.stop();
-      _tickerActive = false;
     }
+  }
+
+  bool hasRotationSpeed() {
+    return speedGlobY != 0 || speedZ1 != 0 || speedZ2 != 0;
   }
 
   double _wrap(double angle) {
@@ -66,7 +70,7 @@ class _CubePageState extends State<CubePage>
     final now = DateTime.now();
     final dt = now.difference(_lastTick).inMilliseconds / 1000.0;
     _lastTick = now;
-    if (speedGlobY != 0 || speedZ1 != 0 || speedZ2 != 0) {
+    if (hasRotationSpeed()) {
       setState(() {
         globY = _wrap(globY + speedGlobY * dt / period);
         cubes[1].rotateZ = _wrap(cubes[1].rotateZ + speedZ1 * dt / period);
@@ -124,9 +128,6 @@ class _CubePageState extends State<CubePage>
     final frame = await codec.getNextFrame();
     return frame.image;
   }
-
-  // Глобальное вращение (XYZ)
-  double globX = 0, globY = 0, globZ = 0;
 
   // Состояния для каждого параллелепипеда
   final List<ParallelepipedState> cubes = [
