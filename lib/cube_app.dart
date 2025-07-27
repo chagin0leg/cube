@@ -8,6 +8,7 @@ class CubeApp extends StatelessWidget {
   CubeApp({super.key});
 
   final ColorFilterNotifier _colorFilterNotifier = ColorFilterNotifier();
+  // TODO: по-нормальному, надо бы убивать в dispose
 
   @override
   Widget build(BuildContext context) {

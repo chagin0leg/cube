@@ -162,18 +162,24 @@ class _CubePageState extends State<CubePage>
       body: SafeArea(
         child: Column(
           children: [
+            Padding(
+              padding: EdgeInsetsGeometry.fromLTRB(48, 16, 16, 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [const CubeStatusText(), _resetButton()],
+              ),
+            ),
             Expanded(
-              child: Stack(
-                alignment: Alignment.bottomCenter,
-                children: [
-                  !imagesLoaded
-                      ? const Center(child: CircularProgressIndicator())
-                      : RawImage(image: baseImage!, width: 120),
-                  Center(
-                    child:
-                        !imagesLoaded
-                            ? const Center(child: CircularProgressIndicator())
-                            : RepaintBoundary(
+              child:
+                  imagesLoaded
+                      ? Stack(
+                        alignment: Alignment.bottomCenter,
+                        children: [
+                          RawImage(image: baseImage!, width: 120),
+                          Transform.translate(
+                            offset: Offset(0, -32),
+                            child: RepaintBoundary(
                               child: CustomPaint(
                                 size: Size.infinite,
                                 painter: ParallelepipedsPainter(
@@ -185,11 +191,10 @@ class _CubePageState extends State<CubePage>
                                 ),
                               ),
                             ),
-                  ),
-                  Positioned(top: 16, right: 16, child: _resetButton()),
-                  Positioned(top: 16, left: 48, child: const CubeStatusText()),
-                ],
-              ),
+                          ),
+                        ],
+                      )
+                      : Center(child: CircularProgressIndicator()),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 48),
