@@ -1,8 +1,8 @@
 import 'dart:ui' as ui;
 
 import 'package:cube/crop_image_extension.dart';
+import 'package:cube/cube_elements/cube.dart';
 import 'package:cube/cube_status_text.dart';
-import 'package:cube/figure_state.dart';
 import 'package:cube/parallelepipeds_painter.dart';
 import 'package:cube/theme_button.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +21,7 @@ class _CubePageState extends State<CubePage>
   List<List<ui.Image?>>? faceImages;
   bool imagesLoaded = false;
 
-  CubeState cube = CubeState();
+  Cube cube = Cube();
 
   late final Ticker _ticker;
   late DateTime _lastTick;

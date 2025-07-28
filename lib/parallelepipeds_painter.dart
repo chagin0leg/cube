@@ -1,15 +1,16 @@
 import 'dart:ui' as ui;
 
-import 'package:cube/figure_state.dart';
+import 'package:cube/cube_elements/cube.dart';
+import 'package:cube/cube_elements/edge.dart';
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
 
 class EdgesPainter extends CustomPainter {
-  static const double width = CubeState.width;
-  static const double height = CubeState.height;
-  static const double depth = CubeState.depth;
+  static const double width = Cube.width;
+  static const double height = Cube.height;
+  static const double depth = Cube.depth;
 
-  final List<EdgeState> edges;
+  final List<Edge> edges;
   final double rotationAngleX, rotationAngleY, rotationAngleZ;
   final List<List<ui.Image?>> faceImages;
   EdgesPainter({
@@ -67,7 +68,7 @@ class EdgesPainter extends CustomPainter {
         inSector(rotationAngleY, 210, 30) ? [0, 1, 2] : [2, 1, 0];
 
     for (int i in order) {
-      final EdgeState state = edges[i];
+      final Edge state = edges[i];
       // Локальная матрица: вращение и сдвиг вдоль своей оси (Z)
       final Matrix4 local =
           Matrix4.identity()
