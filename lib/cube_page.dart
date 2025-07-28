@@ -21,8 +21,7 @@ class _CubePageState extends State<CubePage>
   List<List<ui.Image?>>? faceImages;
   bool imagesLoaded = false;
 
-  double cubeRotationAngleX = 0, cubeRotationAngleY = 0, cubeRotationAngleZ = 0;
-  double cubeRotationSpeedX = 0, cubeRotationSpeedY = 0, cubeRotationSpeedZ = 0;
+  CubeState cube = CubeState();
 
   late final Ticker _ticker;
   late DateTime _lastTick;
@@ -31,7 +30,6 @@ class _CubePageState extends State<CubePage>
   void initState() {
     super.initState();
     _loadImages();
-    _reset();
     _lastTick = DateTime.now();
     _ticker = createTicker(_onTick);
     _updateTicker();
@@ -44,7 +42,7 @@ class _CubePageState extends State<CubePage>
   }
 
   void _updateTicker() {
-    final needTicker = hasRotationSpeed();
+    final needTicker = !cube.isMotionless();
     if (needTicker && !_ticker.isActive) {
       _ticker.start();
     } else if (!needTicker && _ticker.isActive) {
@@ -52,41 +50,20 @@ class _CubePageState extends State<CubePage>
     }
   }
 
-  bool hasRotationSpeed() {
-    return cubeRotationSpeedX != 0 ||
-        cubeRotationSpeedY != 0 ||
-        cubeRotationSpeedZ != 0 ||
-        edges[0].oZ.rotationSpeed != 0 ||
-        edges[1].oZ.rotationSpeed != 0 ||
-        edges[2].oZ.rotationSpeed != 0;
-  }
-
-  double _normalizeAngle(double angle) {
-    angle = angle % 360.0;
-    if (angle < 0) angle += 360.0;
-    return angle;
-  }
-
   void _onTick(Duration _) {
-    const double period = 6.0;
     final now = DateTime.now();
     final dt = now.difference(_lastTick).inMilliseconds / 1000.0;
     _lastTick = now;
-    if (hasRotationSpeed()) {
-      setState(() {
-        cubeRotationAngleX = _normalizeAngle(
-          cubeRotationAngleX + cubeRotationSpeedX * dt / period,
-        );
-        cubeRotationAngleY = _normalizeAngle(
-          cubeRotationAngleY + cubeRotationSpeedY * dt / period,
-        );
-        cubeRotationAngleZ = _normalizeAngle(
-          cubeRotationAngleZ + cubeRotationSpeedZ * dt / period,
-        );
 
-        edges[0].oZ.calculateRotationAngle(dt);
-        edges[1].oZ.calculateRotationAngle(dt);
-        edges[2].oZ.calculateRotationAngle(dt);
+    if (!cube.isMotionless()) {
+      setState(() {
+        cube.oX.calculateRotationAngle(dt);
+        cube.oY.calculateRotationAngle(dt);
+        cube.oZ.calculateRotationAngle(dt);
+
+        cube.edgeBottom.oZ.calculateRotationAngle(dt);
+        cube.edgeMedium.oZ.calculateRotationAngle(dt);
+        cube.edgeTop.oZ.calculateRotationAngle(dt);
       });
     } else {
       _updateTicker();
@@ -141,34 +118,6 @@ class _CubePageState extends State<CubePage>
     return frame.image;
   }
 
-  // Состояния для каждого параллелепипеда
-  final List<EdgeState> edges = [
-    EdgeState(oZ: AxisState(offset: -depth)), // [Zhuravlev] нижний левый (Z0)
-    EdgeState(), // [Zhuravlev] средний (Z1)
-    EdgeState(oZ: AxisState(offset: depth)), // [Zhuravlev] верхний правый (Z2)
-  ];
-
-  void _reset() {
-    setState(() {
-      cubeRotationAngleX = 0;
-      cubeRotationAngleY = 0;
-      cubeRotationAngleZ = 0;
-      cubeRotationSpeedX = 0;
-      cubeRotationSpeedY = 0;
-      cubeRotationSpeedZ = 0;
-
-      edges[0].oZ.offset = -depth;
-      edges[1].oZ.offset = 0;
-      edges[2].oZ.offset = depth;
-      edges[0].oZ.rotationAngle = 0;
-      edges[1].oZ.rotationAngle = 0;
-      edges[2].oZ.rotationAngle = 0;
-      edges[0].oZ.rotationSpeed = 0;
-      edges[1].oZ.rotationSpeed = 0;
-      edges[2].oZ.rotationSpeed = 0;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -196,10 +145,14 @@ class _CubePageState extends State<CubePage>
                               child: CustomPaint(
                                 size: Size.infinite,
                                 painter: EdgesPainter(
-                                  edges: edges,
-                                  rotationAngleX: cubeRotationAngleX,
-                                  rotationAngleY: cubeRotationAngleY,
-                                  globZ: cubeRotationAngleZ,
+                                  edges: [
+                                    cube.edgeBottom,
+                                    cube.edgeMedium,
+                                    cube.edgeTop,
+                                  ],
+                                  rotationAngleX: cube.oX.rotationAngle,
+                                  rotationAngleY: cube.oY.rotationAngle,
+                                  rotationAngleZ: cube.oZ.rotationAngle,
                                   faceImages: faceImages!,
                                 ),
                               ),
@@ -215,28 +168,28 @@ class _CubePageState extends State<CubePage>
                 mainAxisSize: MainAxisSize.min,
                 spacing: 8,
                 children: [
-                  _buildSlider(cubeRotationSpeedX, (value) {
-                    setState(() => cubeRotationSpeedX = value);
+                  _buildSlider(cube.oX.rotationSpeed, (value) {
+                    setState(() => cube.oX.rotationSpeed = value);
                     _updateTicker();
                   }),
-                  _buildSlider(cubeRotationSpeedY, (value) {
-                    setState(() => cubeRotationSpeedY = value);
+                  _buildSlider(cube.oY.rotationSpeed, (value) {
+                    setState(() => cube.oY.rotationSpeed = value);
                     _updateTicker();
                   }),
-                  _buildSlider(cubeRotationSpeedZ, (value) {
-                    setState(() => cubeRotationSpeedZ = value);
+                  _buildSlider(cube.oZ.rotationSpeed, (value) {
+                    setState(() => cube.oZ.rotationSpeed = value);
                     _updateTicker();
                   }),
-                  _buildSlider(edges[0].oZ.rotationSpeed, (value) {
-                    setState(() => edges[0].oZ.rotationSpeed = value);
+                  _buildSlider(cube.edgeBottom.oZ.rotationSpeed, (value) {
+                    setState(() => cube.edgeBottom.oZ.rotationSpeed = value);
                     _updateTicker();
                   }),
-                  _buildSlider(edges[1].oZ.rotationSpeed, (value) {
-                    setState(() => edges[1].oZ.rotationSpeed = value);
+                  _buildSlider(cube.edgeMedium.oZ.rotationSpeed, (value) {
+                    setState(() => cube.edgeMedium.oZ.rotationSpeed = value);
                     _updateTicker();
                   }),
-                  _buildSlider(edges[2].oZ.rotationSpeed, (value) {
-                    setState(() => edges[2].oZ.rotationSpeed = value);
+                  _buildSlider(cube.edgeTop.oZ.rotationSpeed, (value) {
+                    setState(() => cube.edgeTop.oZ.rotationSpeed = value);
                     _updateTicker();
                   }),
                 ],
@@ -250,7 +203,15 @@ class _CubePageState extends State<CubePage>
   }
 
   Widget _resetButton() {
-    return InkWell(onTap: _reset, child: const Icon(Icons.stop_circle_rounded));
+    return InkWell(
+      onTap: () {
+        setState(() {
+          cube.resetOrientation();
+          cube.stopMotion();
+        });
+      },
+      child: const Icon(Icons.stop_circle_rounded),
+    );
   }
 
   Widget _buildSlider(double value, ValueChanged<double> onChanged) =>

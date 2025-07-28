@@ -4,18 +4,19 @@ import 'package:cube/figure_state.dart';
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
 
-// Размеры параллелепипеда (3:3:1)
-const double width = 180, height = 180, depth = 60;
-
 class EdgesPainter extends CustomPainter {
+  static const double width = CubeState.width;
+  static const double height = CubeState.height;
+  static const double depth = CubeState.depth;
+
   final List<EdgeState> edges;
-  final double rotationAngleX, rotationAngleY, globZ;
+  final double rotationAngleX, rotationAngleY, rotationAngleZ;
   final List<List<ui.Image?>> faceImages;
   EdgesPainter({
     required this.edges,
     required this.rotationAngleX,
     required this.rotationAngleY,
-    required this.globZ,
+    required this.rotationAngleZ,
     required this.faceImages,
   });
 
@@ -60,7 +61,7 @@ class EdgesPainter extends CustomPainter {
         Matrix4.identity()
           ..rotateX(vm.radians(rotationAngleX))
           ..rotateY(vm.radians(rotationAngleY))
-          ..rotateZ(vm.radians(globZ));
+          ..rotateZ(vm.radians(rotationAngleZ));
 
     late List<int> order =
         inSector(rotationAngleY, 210, 30) ? [0, 1, 2] : [2, 1, 0];
@@ -169,7 +170,7 @@ class EdgesPainter extends CustomPainter {
     return cubesChanged ||
         rotationAngleX != oldDelegate.rotationAngleX ||
         rotationAngleY != oldDelegate.rotationAngleY ||
-        globZ != oldDelegate.globZ;
+        rotationAngleZ != oldDelegate.rotationAngleZ;
   }
 }
 
